@@ -53,6 +53,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.okhttp)
     implementation(libs.coil.compose)
+    implementation(libs.nanohttpd)
     testImplementation(libs.junit)
     testImplementation(libs.okhttp.mockwebserver)
 }
