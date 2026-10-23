@@ -79,18 +79,20 @@ fun CouchcastApp(vm: MainViewModel) {
         )
     ) {
         Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-            MainScreen(vm)
+            var installing by rememberSaveable { mutableStateOf(false) }
+            if (installing) InstallScreen(vm, onClose = { installing = false })
+            else MainScreen(vm, onInstall = { installing = true })
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun MainScreen(vm: MainViewModel) {
+private fun MainScreen(vm: MainViewModel, onInstall: () -> Unit) {
     val rooms by vm.rooms.collectAsStateWithLifecycle()
     val currentIp by vm.currentIp.collectAsStateWithLifecycle()
     val message by vm.message.collectAsStateWithLifecycle()
-    var tab by rememberSaveable { mutableStateOf(if (rooms.isEmpty()) 2 else 0) }
+    var tab by rememberSaveable { mutableStateOf(if (rooms.isEmpty()) 3 else 0) }
     val snackbar = remember { SnackbarHostState() }
     val room = rooms.firstOrNull { it.ip == currentIp }
 
@@ -106,7 +108,7 @@ private fun MainScreen(vm: MainViewModel) {
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
             TopAppBar(
-                title = { RoomSwitcher(rooms, room, vm) { tab = 2 } },
+                title = { RoomSwitcher(rooms, room, vm) { tab = 3 } },
                 colors = androidx.compose.material3.TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background
                 ),
@@ -114,7 +116,7 @@ private fun MainScreen(vm: MainViewModel) {
         },
         bottomBar = {
             NavigationBar(containerColor = Panel) {
-                listOf("Remote" to "🎮", "Channels" to "📺", "Rooms" to "🏠")
+                listOf("Remote" to "🎮", "Channels" to "📺", "Play" to "▶️", "Rooms" to "🏠")
                     .forEachIndexed { i, (label, glyph) ->
                         NavigationBarItem(
                             selected = tab == i,
@@ -130,7 +132,8 @@ private fun MainScreen(vm: MainViewModel) {
             when (tab) {
                 0 -> RemoteScreen(vm, room)
                 1 -> ChannelsScreen(vm, room)
-                else -> RoomsScreen(vm)
+                2 -> PlayScreen(room, onInstall)
+                else -> RoomsScreen(vm, onInstall)
             }
         }
     }
@@ -339,7 +342,7 @@ private fun ChannelsScreen(vm: MainViewModel, room: Room?) {
 }
 
 @Composable
-private fun RoomsScreen(vm: MainViewModel) {
+private fun RoomsScreen(vm: MainViewModel, onInstall: () -> Unit) {
     val rooms by vm.rooms.collectAsStateWithLifecycle()
     val currentIp by vm.currentIp.collectAsStateWithLifecycle()
     val scanning by vm.scanning.collectAsStateWithLifecycle()
@@ -353,6 +356,8 @@ private fun RoomsScreen(vm: MainViewModel) {
             }
             OutlinedButton(onClick = { adding = true }, modifier = Modifier.weight(1f)) { Text("Add by IP") }
         }
+        Spacer(Modifier.size(8.dp))
+        OutlinedButton(onClick = onInstall, modifier = Modifier.fillMaxWidth()) { Text("Install receiver on Roku") }
         Spacer(Modifier.size(12.dp))
         if (rooms.isEmpty()) {
             EmptyState("No Rooms yet. Tap Find Rokus, or add one by IP address (Settings > Network > About on the TV).")
@@ -409,7 +414,7 @@ private fun RoomsScreen(vm: MainViewModel) {
 }
 
 @Composable
-private fun EmptyState(text: String) {
+internal fun EmptyState(text: String) {
     Box(Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
         Text(text, color = Offline, textAlign = TextAlign.Center)
     }

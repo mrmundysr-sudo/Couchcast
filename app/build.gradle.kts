@@ -13,7 +13,7 @@ android {
         minSdk = 26
         targetSdk = 34
         versionCode = 1
-        versionName = "0.1.0"
+        versionName = "0.1.0" + (System.getenv("GITHUB_RUN_NUMBER")?.let { "-build$it" } ?: "-local")
     }
 
     buildTypes {
@@ -33,6 +33,17 @@ android {
     }
 }
 
+// The Roku receiver channel (/receiver) is zipped and bundled as an asset. The app uploads this ZIP to the Roku.
+val receiverZip = tasks.register<Zip>("packageRokuReceiver") {
+    from(rootProject.file("receiver"))
+    archiveFileName.set("couchcast-receiver.zip")
+    destinationDirectory.set(layout.buildDirectory.dir("generated/receiverAssets"))
+}
+android.sourceSets.getByName("main").assets.srcDir(layout.buildDirectory.dir("generated/receiverAssets"))
+tasks.configureEach {
+    if (name.startsWith("merge") && name.endsWith("Assets")) dependsOn(receiverZip)
+}
+
 dependencies {
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)
@@ -43,4 +54,5 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.coil.compose)
     testImplementation(libs.junit)
+    testImplementation(libs.okhttp.mockwebserver)
 }

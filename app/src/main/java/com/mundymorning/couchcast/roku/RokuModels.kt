@@ -15,7 +15,7 @@ data class DeviceInfo(
     val powerMode: String,
 )
 
-data class RokuApp(val id: String, val name: String)
+data class RokuApp(val id: String, val name: String, val version: String = "")
 
 object RokuParse {
     private fun tag(xml: String, name: String): String =
@@ -39,7 +39,8 @@ object RokuParse {
     fun apps(xml: String): List<RokuApp> =
         Regex("<app\\s+([^>]*)>([^<]*)</app>").findAll(xml).mapNotNull { m ->
             val id = Regex("id=\"([^\"]+)\"").find(m.groupValues[1])?.groupValues?.get(1)
-            id?.let { RokuApp(it, unescape(m.groupValues[2].trim())) }
+            val version = Regex("version=\"([^\"]*)\"").find(m.groupValues[1])?.groupValues?.get(1).orEmpty()
+            id?.let { RokuApp(it, unescape(m.groupValues[2].trim()), version) }
         }.toList()
 
     fun ssdpLocationHost(response: String): String? =

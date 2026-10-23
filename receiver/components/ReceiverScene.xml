@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="ReceiverScene" extends="Scene">
+    <interface>
+        <field id="mediaRequest" type="assocarray" onChange="onMediaRequest" />
+    </interface>
+    <script type="text/brightscript" uri="pkg:/components/ReceiverScene.brs" />
+    <children>
+        <Rectangle id="background" color="0x0E1117FF" width="1280" height="720" />
+        <Label id="title" text="Couchcast Receiver" translation="[0,250]" width="1280" horizAlign="center" color="0xFFFFFFFF" />
+        <Label id="status" text="Ready. Use the Couchcast app on your phone to send a video here." translation="[140,330]" width="1000" height="320" wrap="true" lineSpacing="8" vertAlign="top" horizAlign="center" color="0xA8B0C0FF" />
+        <Video id="player" visible="false" translation="[0,0]" width="1280" height="720" />
+    </children>
+</component>
