@@ -7,6 +7,9 @@ import com.mundymorning.couchcast.install.InstallPlanner
 import com.mundymorning.couchcast.install.ReceiverPackage
 import com.mundymorning.couchcast.install.ReceiverState
 import com.mundymorning.couchcast.playback.*
+import com.mundymorning.couchcast.receiver.PlayRequest
+import com.mundymorning.couchcast.receiver.Receiver
+import com.mundymorning.couchcast.receiver.RokuReceiver
 import com.mundymorning.couchcast.relay.Relay
 import com.mundymorning.couchcast.relay.RelayOpen
 import com.mundymorning.couchcast.relay.RelaySpec
@@ -50,7 +53,7 @@ data class PlayUi(
 )
 
 class PlayViewModel(app: Application) : AndroidViewModel(app) {
-    private val player = ReceiverPlayer()
+    private val receiver: Receiver = RokuReceiver()
     private val pkg = ReceiverPackage.load(app)
     private val scanner = PageScanner(app)
     private var job: kotlinx.coroutines.Job? = null
@@ -126,7 +129,7 @@ class PlayViewModel(app: Application) : AndroidViewModel(app) {
                 ReceiverState.OTHER_DEV_APP -> { needsReceiver("A different sideloaded channel is on this Roku. Install the receiver first."); return@launch }
             }
             _ui.update { it.copy(message = "Sending the video to your Roku…") }
-            val out = player.play(ip, url, format, referer = referer, userAgent = userAgent)
+            val out = receiver.play(ip, PlayRequest(url, format, referer, userAgent))
             val chosenUrl = url
             lastRokuDrm = out.last?.drm
             _ui.value = when (out.result) {
@@ -168,7 +171,7 @@ class PlayViewModel(app: Application) : AndroidViewModel(app) {
     fun stop(ip: String?) {
         ip ?: return
         viewModelScope.launch {
-            try { RokuClient.key(ip, "Back") } catch (_: IOException) {}
+            receiver.stop(ip)
             endRelay()
             _ui.value = PlayUi()
         }
@@ -266,7 +269,7 @@ class PlayViewModel(app: Application) : AndroidViewModel(app) {
                     relayKey = o.key
                     RelayService.start(getApplication(), ip)
                     _ui.update { it.copy(message = "Sending the relay link to your Roku…") }
-                    val out = player.play(ip, o.playUrl, o.format)
+                    val out = receiver.play(ip, PlayRequest(o.playUrl, o.format))
                     val stats = Relay.manager.stats(o.key)
                     val line = "Phone relay: ${out.result} (${stats?.summary().orEmpty()})"
                     if (out.result == PlayResult.PLAYING) {

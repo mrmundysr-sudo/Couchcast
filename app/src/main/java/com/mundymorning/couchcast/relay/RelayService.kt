@@ -20,7 +20,7 @@ import android.os.PowerManager
 import com.mundymorning.couchcast.MainActivity
 import com.mundymorning.couchcast.playback.NetworkAddress
 import com.mundymorning.couchcast.playback.PlaybackEndDetector
-import com.mundymorning.couchcast.play.ReceiverPlayer
+import com.mundymorning.couchcast.receiver.RokuReceiver
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -58,7 +58,7 @@ class RelayService : Service() {
     /** Idle/max-age expiry plus "has the Roku finished?" checks, independent of the app being on screen. */
     private suspend fun supervise(rokuIp: String?) {
         val detector = PlaybackEndDetector()
-        val player = ReceiverPlayer()
+        val player = RokuReceiver()
         var tick = 0
         while (true) {
             delay(5_000)
