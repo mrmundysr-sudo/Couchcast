@@ -1,5 +1,6 @@
 ' Couchcast Receiver - entry point.
-' Launch with deep link parameters: /launch/dev?contentId=<url>&mediaType=hls|dash|mp4
+' Launch with deep link parameters: /launch/dev?contentId=<url>&mediaType=shortFormVideo&format=hls|dash|mp4|mkv
+' While running, the same parameters arrive as an roInput event (ECP POST /input).
 sub Main(args as Dynamic)
     screen = CreateObject("roSGScreen")
     port = CreateObject("roMessagePort")
@@ -11,7 +12,7 @@ sub Main(args as Dynamic)
     input.setMessagePort(port)
 
     if args <> invalid and args.contentId <> invalid
-        scene.mediaRequest = { url: args.contentId, mediaType: args.mediaType }
+        scene.mediaRequest = { url: args.contentId, format: args.format }
     end if
 
     while true
@@ -22,7 +23,7 @@ sub Main(args as Dynamic)
         else if msgType = "roInputEvent"
             info = msg.getInfo()
             if info <> invalid and info.contentId <> invalid
-                scene.mediaRequest = { url: info.contentId, mediaType: info.mediaType }
+                scene.mediaRequest = { url: info.contentId, format: info.format }
             end if
         end if
     end while

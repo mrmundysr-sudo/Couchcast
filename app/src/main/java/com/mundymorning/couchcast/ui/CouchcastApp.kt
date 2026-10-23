@@ -92,7 +92,7 @@ private fun MainScreen(vm: MainViewModel, onInstall: () -> Unit) {
     val rooms by vm.rooms.collectAsStateWithLifecycle()
     val currentIp by vm.currentIp.collectAsStateWithLifecycle()
     val message by vm.message.collectAsStateWithLifecycle()
-    var tab by rememberSaveable { mutableStateOf(if (rooms.isEmpty()) 2 else 0) }
+    var tab by rememberSaveable { mutableStateOf(if (rooms.isEmpty()) 3 else 0) }
     val snackbar = remember { SnackbarHostState() }
     val room = rooms.firstOrNull { it.ip == currentIp }
 
@@ -108,7 +108,7 @@ private fun MainScreen(vm: MainViewModel, onInstall: () -> Unit) {
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
             TopAppBar(
-                title = { RoomSwitcher(rooms, room, vm) { tab = 2 } },
+                title = { RoomSwitcher(rooms, room, vm) { tab = 3 } },
                 colors = androidx.compose.material3.TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background
                 ),
@@ -116,7 +116,7 @@ private fun MainScreen(vm: MainViewModel, onInstall: () -> Unit) {
         },
         bottomBar = {
             NavigationBar(containerColor = Panel) {
-                listOf("Remote" to "🎮", "Channels" to "📺", "Rooms" to "🏠")
+                listOf("Remote" to "🎮", "Channels" to "📺", "Play" to "▶️", "Rooms" to "🏠")
                     .forEachIndexed { i, (label, glyph) ->
                         NavigationBarItem(
                             selected = tab == i,
@@ -132,6 +132,7 @@ private fun MainScreen(vm: MainViewModel, onInstall: () -> Unit) {
             when (tab) {
                 0 -> RemoteScreen(vm, room)
                 1 -> ChannelsScreen(vm, room)
+                2 -> PlayScreen(room, onInstall)
                 else -> RoomsScreen(vm, onInstall)
             }
         }
@@ -413,7 +414,7 @@ private fun RoomsScreen(vm: MainViewModel, onInstall: () -> Unit) {
 }
 
 @Composable
-private fun EmptyState(text: String) {
+internal fun EmptyState(text: String) {
     Box(Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
         Text(text, color = Offline, textAlign = TextAlign.Center)
     }

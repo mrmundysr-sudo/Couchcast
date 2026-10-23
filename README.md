@@ -13,6 +13,9 @@ See the build spec for the full roadmap.
 
 Not yet built: lock-screen/tile/widget, casting, ad clock and billing, website.
 
+## Play tab
+Paste a direct video link (`.mp4`, `.m3u8`, `.mpd`) and tap **Play on Roku**. The app checks the receiver is installed and current, sends the link with an ECP deep link (`/launch/dev?contentId=…` or `/input?…` if already running), then asks the Roku's `/query/media-player` and only says "playing" when the Roku does.
+
 ## Roku receiver installer
 Two different things: the **Android APK** (this app) and the **Roku receiver package** (`/receiver`, zipped into the APK as `assets/couchcast-receiver.zip` and uploaded to the TV).
 

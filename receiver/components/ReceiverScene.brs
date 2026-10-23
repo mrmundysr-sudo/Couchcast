@@ -12,7 +12,7 @@ sub onMediaRequest()
 
     content = createObject("roSGNode", "ContentNode")
     content.url = request.url
-    content.streamFormat = streamFormatFor(request.mediaType, request.url)
+    content.streamFormat = streamFormatFor(request.format, request.url)
 
     m.status.text = "Loading video..."
     m.player.content = content
@@ -21,12 +21,13 @@ sub onMediaRequest()
     m.player.setFocus(true)
 end sub
 
-function streamFormatFor(mediaType as Dynamic, url as String) as String
+function streamFormatFor(hint as Dynamic, url as String) as String
     t = ""
-    if mediaType <> invalid then t = LCase(mediaType)
+    if hint <> invalid then t = LCase(hint)
     lowerUrl = LCase(url)
-    if t = "hls" or t = "m3u8" or Instr(1, lowerUrl, ".m3u8") > 0 then return "hls"
-    if t = "dash" or t = "mpd" or Instr(1, lowerUrl, ".mpd") > 0 then return "dash"
+    if t = "hls" or Instr(1, lowerUrl, ".m3u8") > 0 then return "hls"
+    if t = "dash" or Instr(1, lowerUrl, ".mpd") > 0 then return "dash"
+    if t = "mkv" or Instr(1, lowerUrl, ".mkv") > 0 then return "mkv"
     return "mp4"
 end function
 
