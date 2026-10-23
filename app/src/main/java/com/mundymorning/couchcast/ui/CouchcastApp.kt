@@ -79,14 +79,16 @@ fun CouchcastApp(vm: MainViewModel) {
         )
     ) {
         Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-            MainScreen(vm)
+            var installing by rememberSaveable { mutableStateOf(false) }
+            if (installing) InstallScreen(vm, onClose = { installing = false })
+            else MainScreen(vm, onInstall = { installing = true })
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun MainScreen(vm: MainViewModel) {
+private fun MainScreen(vm: MainViewModel, onInstall: () -> Unit) {
     val rooms by vm.rooms.collectAsStateWithLifecycle()
     val currentIp by vm.currentIp.collectAsStateWithLifecycle()
     val message by vm.message.collectAsStateWithLifecycle()
@@ -130,7 +132,7 @@ private fun MainScreen(vm: MainViewModel) {
             when (tab) {
                 0 -> RemoteScreen(vm, room)
                 1 -> ChannelsScreen(vm, room)
-                else -> RoomsScreen(vm)
+                else -> RoomsScreen(vm, onInstall)
             }
         }
     }
@@ -339,7 +341,7 @@ private fun ChannelsScreen(vm: MainViewModel, room: Room?) {
 }
 
 @Composable
-private fun RoomsScreen(vm: MainViewModel) {
+private fun RoomsScreen(vm: MainViewModel, onInstall: () -> Unit) {
     val rooms by vm.rooms.collectAsStateWithLifecycle()
     val currentIp by vm.currentIp.collectAsStateWithLifecycle()
     val scanning by vm.scanning.collectAsStateWithLifecycle()
@@ -353,6 +355,8 @@ private fun RoomsScreen(vm: MainViewModel) {
             }
             OutlinedButton(onClick = { adding = true }, modifier = Modifier.weight(1f)) { Text("Add by IP") }
         }
+        Spacer(Modifier.size(8.dp))
+        OutlinedButton(onClick = onInstall, modifier = Modifier.fillMaxWidth()) { Text("Install receiver on Roku") }
         Spacer(Modifier.size(12.dp))
         if (rooms.isEmpty()) {
             EmptyState("No Rooms yet. Tap Find Rokus, or add one by IP address (Settings > Network > About on the TV).")
