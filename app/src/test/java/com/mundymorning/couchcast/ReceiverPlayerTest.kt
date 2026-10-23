@@ -1,6 +1,7 @@
 package com.mundymorning.couchcast
 
 import com.mundymorning.couchcast.install.RokuDevClient
+import com.mundymorning.couchcast.play.PlayOutcome
 import com.mundymorning.couchcast.play.PlayResult
 import com.mundymorning.couchcast.play.ReceiverPlayer
 import kotlinx.coroutines.runBlocking
@@ -40,6 +41,11 @@ class ReceiverPlayerTest {
         assertTrue(ReceiverPlayer.requestPath(false, "https://x.com/v.mp4", "mp4").startsWith("/launch/dev?contentId="))
     }
 
+    @Test fun parsesFormatAndDrm() {
+        val i = ReceiverPlayer.parsePlayer("<player error=\"false\" state=\"play\"><format audio=\"aac\" drm=\"widevine\" video=\"hevc\" video_res=\"1920x1080\"/></player>")!!
+        assertEquals("hevc", i.video); assertEquals("aac", i.audio); assertEquals("widevine", i.drm); assertEquals("1920x1080", i.resolution)
+    }
+
     @Test fun parsesMediaPlayerState() {
         assertEquals("play", ReceiverPlayer.parsePlayer("<player error=\"false\" state=\"play\"><plugin id=\"dev\"/></player>")!!.state)
         assertTrue(ReceiverPlayer.parsePlayer("<player state=\"close\" error=\"true\"></player>")!!.error)
@@ -68,6 +74,10 @@ class ReceiverPlayerFakeEcpTest {
     private val seen = CopyOnWriteArrayList<String>()
     @Volatile private var activeId = "tvinput.hdmi1"
     @Volatile private var playerState = "play"
+    /** After this many media-player queries the fake Roku switches to [afterState] (simulates a stream that dies). */
+    @Volatile private var dieAfter = Int.MAX_VALUE
+    @Volatile private var afterState = "close"
+    private val playerQueries = java.util.concurrent.atomic.AtomicInteger()
 
     @Before fun start() {
         server = MockWebServer()
@@ -77,8 +87,10 @@ class ReceiverPlayerFakeEcpTest {
                 return when {
                     request.path!!.startsWith("/query/active-app") ->
                         MockResponse().setBody("<active-app><app id=\"$activeId\">x</app></active-app>")
-                    request.path!!.startsWith("/query/media-player") ->
-                        MockResponse().setBody("<player error=\"false\" state=\"$playerState\"></player>")
+                    request.path!!.startsWith("/query/media-player") -> {
+                        val st = if (playerQueries.incrementAndGet() > dieAfter) afterState else playerState
+                        MockResponse().setBody("<player error=\"false\" state=\"$st\"><format audio=\"aac\" captions=\"none\" drm=\"none\" video=\"\" video_res=\"\"/></player>")
+                    }
                     request.path!!.startsWith("/launch/") || request.path!!.startsWith("/input") -> MockResponse()
                     else -> MockResponse().setResponseCode(404)
                 }
@@ -92,25 +104,38 @@ class ReceiverPlayerFakeEcpTest {
     private fun player() = ReceiverPlayer(RokuDevClient(ecpPort = server.port), server.port)
 
     @Test fun launchesTheReceiverThenConfirmsPlayback() = runBlocking {
-        val r = player().play("127.0.0.1", "https://x.com/v.mp4", "mp4", waitMs = 3000)
-        assertEquals(PlayResult.PLAYING, r)
+        val r = player().play("127.0.0.1", "https://x.com/v.mp4", "mp4", waitMs = 3000, stableMs = 1500)
+        assertEquals(PlayResult.PLAYING, r.result)
         assertTrue(seen.toString(), seen.any { it.startsWith("POST /launch/dev?contentId=https%3A%2F%2Fx.com%2Fv.mp4") })
     }
 
     @Test fun usesInputWhenReceiverAlreadyRunning() = runBlocking {
         activeId = "dev"
-        assertEquals(PlayResult.PLAYING, player().play("127.0.0.1", "https://x.com/v.mp4", "mp4", waitMs = 3000))
+        assertEquals(PlayResult.PLAYING, player().play("127.0.0.1", "https://x.com/v.mp4", "mp4", waitMs = 3000, stableMs = 1500).result)
         assertTrue(seen.toString(), seen.any { it.startsWith("POST /input?contentId=") })
         assertFalse(seen.any { it.startsWith("POST /launch/") })
     }
 
+    @Test fun streamThatStartsThenDiesIsReportedWithTheRokusFormatReport() = runBlocking {
+        activeId = "dev"; dieAfter = 2
+        val out: PlayOutcome = player().play("127.0.0.1", "https://x.com/v.m3u8", "hls", waitMs = 3000, stableMs = 6000)
+        assertEquals(PlayResult.STOPPED_EARLY, out.result)
+        assertEquals("aac", out.last!!.audio)
+        assertTrue(out.last!!.video.isNullOrBlank())
+    }
+
+    @Test fun bufferingAloneIsNotPlaying() = runBlocking {
+        activeId = "dev"; playerState = "buffer"
+        assertEquals(PlayResult.RECEIVER_OPEN_NOT_CONFIRMED, player().play("127.0.0.1", "https://x.com/v.mp4", "mp4", waitMs = 1500, stableMs = 1000).result)
+    }
+
     @Test fun neverClaimsPlayingWhenTheRokuSaysItIsNot() = runBlocking {
         activeId = "dev"; playerState = "close"
-        assertEquals(PlayResult.RECEIVER_OPEN_NOT_CONFIRMED, player().play("127.0.0.1", "https://x.com/v.mp4", "mp4", waitMs = 1500))
+        assertEquals(PlayResult.RECEIVER_OPEN_NOT_CONFIRMED, player().play("127.0.0.1", "https://x.com/v.mp4", "mp4", waitMs = 1500, stableMs = 1000).result)
     }
 
     @Test fun reportsNotStartedWhenReceiverNeverOpens() = runBlocking {
         playerState = "none"
-        assertEquals(PlayResult.NOT_STARTED, player().play("127.0.0.1", "https://x.com/v.mp4", "mp4", waitMs = 1200))
+        assertEquals(PlayResult.NOT_STARTED, player().play("127.0.0.1", "https://x.com/v.mp4", "mp4", waitMs = 1200, stableMs = 1000).result)
     }
 }

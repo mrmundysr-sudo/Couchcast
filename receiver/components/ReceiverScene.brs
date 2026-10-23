@@ -34,11 +34,35 @@ end function
 sub onPlayerState()
     state = m.player.state
     if state = "error"
-        showIdle("This video could not be played. Try another link from the Couchcast app.")
+        showError()
     else if state = "finished"
         showIdle("Finished. Send another video from the Couchcast app.")
     end if
 end sub
+
+' Keep the reason on screen so a failed video can be diagnosed from the TV.
+sub showError()
+    p = m.player
+    text = "This video could not be played."
+    msg = safeStr(p.errorMsg)
+    if msg <> "" then text = text + chr(10) + msg
+    code = safeStr(p.errorCode)
+    if code <> "" then text = text + chr(10) + "Error code " + code
+    detail = safeStr(p.errorStr)
+    if detail <> "" then text = text + chr(10) + detail
+    vf = safeStr(p.videoFormat)
+    af = safeStr(p.audioFormat)
+    if vf <> "" or af <> "" then text = text + chr(10) + "video: " + vf + "   audio: " + af
+    showIdle(text)
+end sub
+
+function safeStr(v as Dynamic) as String
+    if v = invalid then return ""
+    t = type(v)
+    if t = "roString" or t = "String" then return v
+    if t = "roInt" or t = "Integer" or t = "roInteger" then return v.toStr()
+    return ""
+end function
 
 sub showIdle(text as String)
     m.player.control = "stop"

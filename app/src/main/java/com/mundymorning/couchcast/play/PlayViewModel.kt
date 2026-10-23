@@ -68,14 +68,38 @@ class PlayViewModel(app: Application) : AndroidViewModel(app) {
                 ReceiverState.OTHER_DEV_APP -> { needsReceiver("A different sideloaded channel is on this Roku. Install the receiver first."); return@launch }
             }
             _ui.update { it.copy(message = "Sending the video to your Roku…") }
-            _ui.value = when (player.play(ip, url, format)) {
-                PlayResult.PLAYING -> PlayUi(PlayPhase.PLAYING, "Confirmed: the Roku reports it is playing.")
+            val out = player.play(ip, url, format)
+            _ui.value = when (out.result) {
+                PlayResult.PLAYING -> PlayUi(PlayPhase.PLAYING, "Confirmed: the Roku reports it is playing." + formatNote(out.last))
+                PlayResult.STOPPED_EARLY -> PlayUi(PlayPhase.FAILED, stoppedMessage(out))
                 PlayResult.RECEIVER_OPEN_NOT_CONFIRMED -> PlayUi(PlayPhase.NOT_CONFIRMED,
-                    "The receiver opened, but the Roku hasn't reported playing. Look at the TV. The link may need sign-in, or be a format the Roku can't play.")
+                    "The receiver opened, but the Roku hasn't reported playing. Look at the TV: it shows the reason if the video failed. The link may need sign-in, or be a format the Roku can't play.")
                 PlayResult.NOT_STARTED -> PlayUi(PlayPhase.FAILED, "The Roku didn't start the receiver. Make sure the TV is on and try again.")
                 PlayResult.SEND_FAILED -> PlayUi(PlayPhase.FAILED, "The Roku didn't accept the command. Check Wi-Fi, and that network control is allowed on the TV.")
             }
         }
+    }
+
+    private fun formatNote(i: PlayerInfo?): String {
+        i ?: return ""
+        val bits = listOfNotNull(i.video?.takeIf { it.isNotBlank() }?.let { "video $it" }, i.resolution?.takeIf { it.isNotBlank() },
+            i.audio?.takeIf { it.isNotBlank() }?.let { "audio $it" })
+        return if (bits.isEmpty()) "" else " (${bits.joinToString(", ")})"
+    }
+
+    /** Plain-English reason from what the Roku itself reported. */
+    private fun stoppedMessage(out: PlayOutcome): String {
+        val i = out.last
+        val noVideo = i != null && i.video.isNullOrBlank() && !i.audio.isNullOrBlank()
+        val drm = i?.drm?.takeIf { it.isNotBlank() && !it.equals("none", true) }
+        val why = when {
+            drm != null -> "The Roku says this video is copy-protected ($drm), which the receiver can't play."
+            noVideo -> "The Roku played the sound but could not decode the picture, which usually means the video uses a format this Roku doesn't support."
+            else -> "The link may have expired, need a sign-in, or use a format this Roku can't play."
+        }
+        val seen = formatNote(i).trim().removePrefix("(").removeSuffix(")")
+        return "The video started, then the Roku stopped it after about ${out.playedSeconds} seconds. $why" +
+            (if (seen.isNotEmpty()) " The Roku reported: $seen." else "") + " The TV screen shows more detail."
     }
 
     /** Back stops playback in the receiver. */
