@@ -201,6 +201,12 @@ private fun DevModeStep(ui: InstallUi, vm: InstallViewModel) {
             "Choose “Set password and reboot”. The Roku restarts (about a minute).",
         ).forEachIndexed { i, t -> Text("${i + 1}. $t", fontSize = 14.sp) }
     }
+    if (ui.checks.isNotEmpty()) {
+        Card {
+            Text("What the last check found", fontSize = 14.sp, color = Muted)
+            CheckRows(ui)
+        }
+    }
     Note("Already did this earlier? Tap “Check again”.", Muted)
     Button(onClick = { vm.passwordSet() }, modifier = Modifier.fillMaxWidth()) { Text("I set the password. The Roku is restarting") }
     OutlinedButton(onClick = { vm.runCheck() }, modifier = Modifier.fillMaxWidth()) { Text("Check again") }
@@ -213,6 +219,7 @@ private fun RestartStep(ui: InstallUi, vm: InstallViewModel) {
         Busy("Reconnecting… ${ui.restartWaitSeconds}s")
         Text("This screen keeps checking automatically. You can leave and come back later.", fontSize = 13.sp, color = Muted)
     }
+    if (ui.checks.isNotEmpty()) Card { CheckRows(ui) }
     OutlinedButton(onClick = { vm.runCheck() }) { Text("Check again") }
     TextButton(onClick = { vm.back() }) { Text("Show the Developer Mode steps again") }
 }

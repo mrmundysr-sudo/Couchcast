@@ -155,7 +155,7 @@ class InstallViewModel(app: Application) : AndroidViewModel(app) {
             val pending = store.restartPendingSince > 0
 
             if (!networkUp()) {
-                show(0, CheckStatus.FAILED)
+                show(0, CheckStatus.FAILED, "not on Wi-Fi/Ethernet")
                 finishCheck(Reachability.NETWORK_DOWN, ReceiverState.UNKNOWN, pending); return@launch
             }
             show(0, CheckStatus.OK)
@@ -169,14 +169,15 @@ class InstallViewModel(app: Application) : AndroidViewModel(app) {
                 finishCheck(Reachability.ECP_BLOCKED, ReceiverState.UNKNOWN, pending); return@launch
             }
             if (name == null) {
-                show(1, CheckStatus.FAILED)
+                show(1, CheckStatus.FAILED, "no answer on port 8060")
                 finishCheck(Reachability.ROKU_UNREACHABLE, ReceiverState.UNKNOWN, pending); return@launch
             }
             show(1, CheckStatus.OK)
             if (_ui.value.roomName.isBlank()) _ui.update { it.copy(roomName = name) }
 
-            if (dev.probeInstaller(ip) == InstallerProbe.CLOSED) {
-                show(2, CheckStatus.FAILED, "Developer Mode is not ready")
+            val (probe, why) = dev.probeInstallerDetail(ip)
+            if (probe == InstallerProbe.CLOSED) {
+                show(2, CheckStatus.FAILED, why)
                 finishCheck(Reachability.DEV_MODE_OFF, ReceiverState.UNKNOWN, pending); return@launch
             }
             show(2, CheckStatus.OK)
@@ -243,6 +244,9 @@ class InstallViewModel(app: Application) : AndroidViewModel(app) {
                 _ui.update { it.copy(restartWaitSeconds = ((System.currentTimeMillis() - started) / 1000).toInt()) }
                 val ecp = try { RokuClient.deviceInfo(ip) != null } catch (_: IOException) { false }
                 if (ecp && dev.probeInstaller(ip) == InstallerProbe.OPEN) {
+                    // Roku is back. Stop "waiting" for good: the follow-up check must land on a
+                    // stable screen that shows its results, never loop back here.
+                    store.restartPendingSince = 0
                     runCheck(); return@launch
                 }
                 delay(4000)

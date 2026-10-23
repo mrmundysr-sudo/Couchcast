@@ -41,11 +41,19 @@ class RokuDevClient(
     private fun installerUrl(ip: String, path: String) = "http://$ip:$installerPort$path"
 
     /** Does anything answer on the installer port? A closed port means Developer Mode / installer is off. */
-    suspend fun probeInstaller(ip: String): InstallerProbe = withContext(Dispatchers.IO) {
+    suspend fun probeInstaller(ip: String): InstallerProbe = probeInstallerDetail(ip).first
+
+    /** Same probe, plus a short human-readable reason so a failure can be shown instead of hidden. */
+    suspend fun probeInstallerDetail(ip: String): Pair<InstallerProbe, String> = withContext(Dispatchers.IO) {
         try {
-            probeHttp.newCall(Request.Builder().url(installerUrl(ip, "/")).get().build()).execute().use { InstallerProbe.OPEN }
-        } catch (_: IOException) {
-            InstallerProbe.CLOSED
+            probeHttp.newCall(Request.Builder().url(installerUrl(ip, "/")).get().build()).execute()
+                .use { InstallerProbe.OPEN to "answered HTTP ${it.code}" }
+        } catch (e: IOException) {
+            InstallerProbe.CLOSED to when (e) {
+                is ConnectException -> "port $installerPort refused the connection"
+                is SocketTimeoutException -> "port $installerPort did not answer in time"
+                else -> "${e.javaClass.simpleName}: ${e.message.orEmpty()}".take(80)
+            }
         }
     }
 
