@@ -22,6 +22,8 @@ class RokuDevClientFakeServerTest {
     @Volatile private var lastUpload = ""
     @Volatile private var reply = "<font color=\"red\">Install Success.</font>"
     @Volatile private var dropReply = false
+    @Volatile private var dropFirstChallenge = false
+    private val challengeHits = java.util.concurrent.atomic.AtomicInteger()
     private val nonce = "fakenonce123"
     private val password = "secret"
 
@@ -38,6 +40,9 @@ class RokuDevClientFakeServerTest {
                     ok = f("response") == expect && f("username") == "rokudev"
                 }
                 if (!ok) {
+                    if (dropFirstChallenge && challengeHits.getAndIncrement() == 0) {
+                        return MockResponse().setSocketPolicy(okhttp3.mockwebserver.SocketPolicy.DISCONNECT_AFTER_REQUEST)
+                    }
                     return MockResponse().setResponseCode(401)
                         .addHeader("WWW-Authenticate", "Digest realm=\"rokudev\", qop=\"auth\", nonce=\"$nonce\"")
                 }
@@ -77,6 +82,12 @@ class RokuDevClientFakeServerTest {
         dropReply = true
         val out = client().install("127.0.0.1", "rokudev", password, "x".toByteArray())
         assertTrue("got $out", out is InstallOutcome.ResponseLost)
+    }
+
+    @Test fun droppedSocketOnChallengeIsRetried() = runBlocking {
+        dropFirstChallenge = true
+        val out = client().install("127.0.0.1", "rokudev", password, "x".toByteArray())
+        assertEquals(InstallOutcome.Accepted(false), out)
     }
 
     @Test fun probeSeesOpenAndClosedInstaller() = runBlocking {

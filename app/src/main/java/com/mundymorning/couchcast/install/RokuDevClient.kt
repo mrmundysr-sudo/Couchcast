@@ -31,13 +31,18 @@ class RokuDevClient(
     private val installerPort: Int = 80,
     private val ecpPort: Int = 8060,
 ) {
+    // The Roku's installer hangs up idle keep-alive sockets. Reusing one gives "unexpected end of stream",
+    // so never pool connections here and ask the server to close after each reply.
     private val probeHttp = OkHttpClient.Builder()
         .connectTimeout(2, TimeUnit.SECONDS).readTimeout(3, TimeUnit.SECONDS)
+        .connectionPool(okhttp3.ConnectionPool(0, 1, TimeUnit.NANOSECONDS))
         .retryOnConnectionFailure(false).followRedirects(false).build()
 
     private val uploadHttp = OkHttpClient.Builder()
         .connectTimeout(5, TimeUnit.SECONDS).readTimeout(90, TimeUnit.SECONDS)
-        .writeTimeout(60, TimeUnit.SECONDS).retryOnConnectionFailure(false).followRedirects(false).build()
+        .writeTimeout(60, TimeUnit.SECONDS)
+        .connectionPool(okhttp3.ConnectionPool(0, 1, TimeUnit.NANOSECONDS))
+        .retryOnConnectionFailure(false).followRedirects(false).build()
 
     private fun installerUrl(ip: String, path: String) = "http://$ip:$installerPort$path"
 
@@ -47,7 +52,7 @@ class RokuDevClient(
     /** Same probe, plus a short human-readable reason so a failure can be shown instead of hidden. */
     suspend fun probeInstallerDetail(ip: String): Pair<InstallerProbe, String> = withContext(Dispatchers.IO) {
         try {
-            probeHttp.newCall(Request.Builder().url(installerUrl(ip, "/")).get().build()).execute()
+            probeHttp.newCall(Request.Builder().url(installerUrl(ip, "/")).header("Connection", "close").get().build()).execute()
                 .use { InstallerProbe.OPEN to "answered HTTP ${it.code}" }
         } catch (e: IOException) {
             InstallerProbe.CLOSED to when (e) {
@@ -63,8 +68,7 @@ class RokuDevClient(
             var uploadStarted = false
             try {
                 // 1. Ask for a Digest challenge.
-                val challenge = probeHttp.newCall(Request.Builder().url(installerUrl(ip, "/plugin_install")).get().build())
-                    .execute().use { DigestAuth.parseChallenge(it.header("WWW-Authenticate")) }
+                val challenge = fetchChallenge(ip)
                     ?: return@withContext InstallOutcome.Unknown("The Roku did not ask for a password the way a Roku installer should.")
 
                 // 2. Upload with the Digest response. The body is in memory, so it is safe to build once.
@@ -85,6 +89,23 @@ class RokuDevClient(
                 else InstallOutcome.Unreachable(e.message ?: "Network error")
             }
         }
+
+    /** Asks for a Digest challenge. One quick retry on a dropped socket (the Roku is single-threaded and flaky here). */
+    private fun fetchChallenge(ip: String): DigestAuth.Challenge? {
+        var last: IOException? = null
+        repeat(3) {
+            try {
+                val req = Request.Builder().url(installerUrl(ip, "/plugin_install")).header("Connection", "close").get().build()
+                return probeHttp.newCall(req).execute().use { DigestAuth.parseChallenge(it.header("WWW-Authenticate")) }
+            } catch (e: ConnectException) {
+                throw e
+            } catch (e: IOException) {
+                last = e
+                Thread.sleep(400)
+            }
+        }
+        throw last!!
+    }
 
     suspend fun activeAppId(ip: String): String? = withContext(Dispatchers.IO) {
         try {

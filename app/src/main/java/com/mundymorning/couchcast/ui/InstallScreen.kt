@@ -59,6 +59,9 @@ fun InstallScreen(main: MainViewModel, onClose: () -> Unit, vm: InstallViewModel
 
     Column(Modifier.fillMaxSize().padding(horizontal = 16.dp, vertical = 12.dp)) {
         Text("Install Couchcast Receiver", fontSize = 22.sp, color = MaterialTheme.colorScheme.onBackground)
+        val ctx = androidx.compose.ui.platform.LocalContext.current
+        val build = remember { runCatching { ctx.packageManager.getPackageInfo(ctx.packageName, 0).versionName }.getOrNull().orEmpty() }
+        if (build.isNotEmpty()) Text("App version $build", fontSize = 11.sp, color = Muted)
         Text(
             "Installs the receiver channel on your Roku (not the Android app). Takes a few minutes and needs only this phone and your Roku remote.",
             fontSize = 13.sp, color = Muted, modifier = Modifier.padding(top = 4.dp, bottom = 12.dp),
