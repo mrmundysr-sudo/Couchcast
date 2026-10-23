@@ -23,3 +23,13 @@ Record pass/fail and the build number shown in the app. Anything that fails bloc
 
 ## C. Receiver interface branch (`claude/receiver-interface`)
 15. Repeat A1–A8 unchanged. No visible difference is expected.
+
+## D. Cast tab (`claude/cast-sender`)
+16. Cast icon visible on the dark background; tapping opens the device chooser; it lists the Chromecast / Google TV.
+17. Connect: the tab shows "Connected to <name>".
+18. Direct `.mp4` link plays on the TV; app says "Confirmed".
+19. `.m3u8` link: plays, or fails with a clear reason (CORS/sign-in), never "playing" if it did not.
+20. Web page with a video: found and sent; multiple videos -> choose list.
+21. Stop ends playback; disconnecting from the Cast dialog ends the session.
+22. Phone without Google Play services (if available): tab explains Cast is unavailable and the app does not crash.
+23. Repeat A1–A8 (Roku) - unchanged.

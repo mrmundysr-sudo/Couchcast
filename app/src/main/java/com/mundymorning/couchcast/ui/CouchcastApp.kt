@@ -116,7 +116,7 @@ private fun MainScreen(vm: MainViewModel, onInstall: () -> Unit) {
         },
         bottomBar = {
             NavigationBar(containerColor = Panel) {
-                listOf("Remote" to "🎮", "Channels" to "📺", "Play" to "▶️", "Rooms" to "🏠")
+                listOf("Remote" to "🎮", "Channels" to "📺", "Play" to "▶️", "Rooms" to "🏠", "Cast" to "📡")
                     .forEachIndexed { i, (label, glyph) ->
                         NavigationBarItem(
                             selected = tab == i,
@@ -133,6 +133,7 @@ private fun MainScreen(vm: MainViewModel, onInstall: () -> Unit) {
                 0 -> RemoteScreen(vm, room)
                 1 -> ChannelsScreen(vm, room)
                 2 -> PlayScreen(room, onInstall)
+                4 -> CastScreen()
                 else -> RoomsScreen(vm, onInstall)
             }
         }
