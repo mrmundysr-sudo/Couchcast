@@ -57,6 +57,9 @@ class RokuDevClientFakeServerTest {
         assertTrue(lastUpload.contains("name=\"archive\""))
         assertTrue(lastUpload.contains("name=\"mysubmit\""))
         assertTrue(lastUpload.contains("PKZIPDATA"))
+        // Roku's strict parser rejects extra per-part headers (OkHttp's Content-Length): never send them.
+        assertTrue(!lastUpload.contains("Content-Length"))
+        assertTrue(lastUpload.contains("name=\"mysubmit\"\r\n\r\nReplace\r\n"))
     }
 
     @Test fun wrongPasswordIsReportedAsSuch() = runBlocking {

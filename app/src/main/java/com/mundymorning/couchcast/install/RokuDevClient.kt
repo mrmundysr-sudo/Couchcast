@@ -3,7 +3,6 @@ package com.mundymorning.couchcast.install
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -66,11 +65,7 @@ class RokuDevClient(
                     ?: return@withContext InstallOutcome.Unknown("The Roku did not ask for a password the way a Roku installer should.")
 
                 // 2. Upload with the Digest response. The body is in memory, so it is safe to build once.
-                val body = MultipartBody.Builder().setType(MultipartBody.FORM)
-                    .addFormDataPart("mysubmit", "Replace")
-                    .addFormDataPart("archive", "couchcast-receiver.zip", zip.toRequestBody("application/zip".toMediaType()))
-                    .addFormDataPart("passwd", "")
-                    .build()
+                val body = multipartBody(zip)
                 val auth = DigestAuth.authorization(user, password, "POST", "/plugin_install", challenge)
                 val req = Request.Builder().url(installerUrl(ip, "/plugin_install"))
                     .header("Authorization", auth).post(body).build()
@@ -109,6 +104,23 @@ class RokuDevClient(
     }
 
     companion object {
+        /**
+         * Roku's installer uses a very strict hand-written form parser. OkHttp's MultipartBody adds a
+         * per-part Content-Length header, which makes it report "mysubmit Field Not Found". So the form
+         * is written byte-for-byte like `curl -F mysubmit=Replace -F archive=@x.zip`: only
+         * Content-Disposition (plus Content-Type on the file part), nothing else.
+         */
+        fun multipartBody(zip: ByteArray, boundary: String = "----CouchcastForm" + System.nanoTime().toString(16)): okhttp3.RequestBody {
+            val out = java.io.ByteArrayOutputStream()
+            fun w(t: String) = out.write(t.toByteArray(Charsets.ISO_8859_1))
+            w("--$boundary\r\nContent-Disposition: form-data; name=\"mysubmit\"\r\n\r\nReplace\r\n")
+            w("--$boundary\r\nContent-Disposition: form-data; name=\"archive\"; filename=\"couchcast-receiver.zip\"\r\n")
+            w("Content-Type: application/zip\r\n\r\n")
+            out.write(zip)
+            w("\r\n--$boundary--\r\n")
+            return out.toByteArray().toRequestBody("multipart/form-data; boundary=$boundary".toMediaType())
+        }
+
         /** Classifies the installer's HTML reply. Pure, so it is unit tested. */
         fun parseResponse(code: Int, html: String): InstallOutcome {
             if (code == 401) return InstallOutcome.BadPassword
