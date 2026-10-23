@@ -102,6 +102,9 @@ object CastLinks {
         val t = raw.trim()
         if (t.isEmpty() || t.any { it.isWhitespace() }) return null
         val u = if (Regex("^(?i)https?://.+").matches(t)) t else if ("://" in t) return null else "https://$t"
-        return if (Regex("^(?i)https?://[^/\\s]+.*").matches(u)) u else null
+        if (!Regex("^(?i)https?://[^/\\s]+.*").matches(u)) return null
+        // The host must look like a host (and optional port), so "javascript:alert(1)" can't pass as "https://javascript:alert(1)".
+        val authority = u.substringAfter("://").substringBefore('/').substringBefore('?').substringBefore('#')
+        return if (Regex("^([^@]*@)?[A-Za-z0-9._-]+(:\\d{1,5})?$").matches(authority)) u else null
     }
 }
