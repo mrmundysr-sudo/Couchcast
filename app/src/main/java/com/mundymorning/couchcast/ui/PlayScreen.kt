@@ -44,7 +44,7 @@ fun PlayScreen(room: Room?, onInstall: () -> Unit, vm: PlayViewModel = viewModel
     val ui by vm.ui.collectAsStateWithLifecycle()
     var url by rememberSaveable { mutableStateOf("") }
     val clipboard = LocalClipboardManager.current
-    val busy = ui.phase == PlayPhase.SENDING
+    val busy = ui.phase == PlayPhase.SENDING || ui.phase == PlayPhase.SCANNING
 
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp),
@@ -52,12 +52,12 @@ fun PlayScreen(room: Room?, onInstall: () -> Unit, vm: PlayViewModel = viewModel
     ) {
         Text("Play a video on ${room.name}", fontSize = 18.sp)
         Text(
-            "Paste a direct video link (ending in .mp4, .m3u8 or .mpd). It plays through the Couchcast Receiver on your Roku. Web pages and streaming-site links won't work.",
+            "Paste a video link or a web page that has a video on it. The app finds the video and plays it through the Couchcast Receiver on your Roku. Sites that copy-protect their video (Netflix, Hulu, Disney+, YouTube and similar) can't be played this way.",
             fontSize = 13.sp, color = Color(0xFF8A8F9C),
         )
         OutlinedTextField(
             value = url, onValueChange = { url = it }, singleLine = true,
-            label = { Text("Video link") },
+            label = { Text("Video link or web page") },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
             modifier = Modifier.fillMaxWidth(),
         )
@@ -71,13 +71,14 @@ fun PlayScreen(room: Room?, onInstall: () -> Unit, vm: PlayViewModel = viewModel
             Row(verticalAlignment = Alignment.CenterVertically) {
                 CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
                 Spacer(Modifier.size(10.dp))
-                Text(ui.message.orEmpty(), fontSize = 14.sp)
+                Text(ui.message.orEmpty(), fontSize = 14.sp, modifier = Modifier.weight(1f))
+                TextButton(onClick = { vm.cancel() }) { Text("Cancel") }
             }
         } else {
             ui.message?.let {
                 val color = when (ui.phase) {
                     PlayPhase.PLAYING -> Color(0xFF3DDC84)
-                    PlayPhase.IDLE, PlayPhase.NOT_CONFIRMED -> Color(0xFF8A8F9C)
+                    PlayPhase.IDLE, PlayPhase.NOT_CONFIRMED, PlayPhase.CHOOSE -> Color(0xFF8A8F9C)
                     else -> Color(0xFFFF6B6B)
                 }
                 Text(it, color = color, fontSize = 14.sp)
@@ -85,7 +86,14 @@ fun PlayScreen(room: Room?, onInstall: () -> Unit, vm: PlayViewModel = viewModel
         }
         when (ui.phase) {
             PlayPhase.NEEDS_RECEIVER -> Button(onClick = onInstall) { Text("Open the receiver installer") }
-            PlayPhase.UNKNOWN_FORMAT -> TextButton(onClick = { vm.play(room.ip, url, forceMp4 = true) }) { Text("Try anyway as an MP4") }
+            PlayPhase.NO_VIDEO -> TextButton(onClick = { vm.play(room.ip, url, forceMp4 = true) }) { Text("Try the link itself as an MP4") }
+            PlayPhase.CHOOSE -> Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                ui.candidates.forEach { c ->
+                    OutlinedButton(onClick = { vm.playCandidate(room.ip, c) }, modifier = Modifier.fillMaxWidth()) {
+                        Text(com.mundymorning.couchcast.play.MediaLinks.label(c), maxLines = 1)
+                    }
+                }
+            }
             PlayPhase.PLAYING, PlayPhase.NOT_CONFIRMED -> OutlinedButton(onClick = { vm.stop(room.ip) }) { Text("Stop") }
             else -> {}
         }

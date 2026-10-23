@@ -47,6 +47,21 @@ class ReceiverPlayerTest {
     }
 }
 
+class MediaLinksTest {
+    @Test fun keepsOnlyDirectMediaLinksAndDedupes() {
+        val out = com.mundymorning.couchcast.play.MediaLinks.clean(listOf(
+            "https://cdn.x.com/a/master.m3u8?t=1", "https://cdn.x.com/a/master.m3u8?t=1#frag",
+            "https://x.com/page.html", "blob:https://x.com/123", "javascript:void(0)",
+            "http://x.com/v.MP4", "https://x.com/seg1.ts"))
+        assertEquals(listOf("https://cdn.x.com/a/master.m3u8?t=1", "http://x.com/v.MP4"), out)
+    }
+
+    @Test fun labelsAreShort() {
+        assertEquals("cdn.x.com / master.m3u8", com.mundymorning.couchcast.play.MediaLinks.label("https://cdn.x.com/a/b/master.m3u8?token=zzz"))
+        assertTrue(com.mundymorning.couchcast.play.MediaLinks.label("https://x.com/" + "a".repeat(80) + ".mp4").length < 45)
+    }
+}
+
 /** A fake Roku ECP endpoint. It is not a real Roku. */
 class ReceiverPlayerFakeEcpTest {
     private lateinit var server: MockWebServer

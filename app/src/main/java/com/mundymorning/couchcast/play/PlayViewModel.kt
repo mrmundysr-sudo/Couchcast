@@ -14,26 +14,50 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.IOException
 
-enum class PlayPhase { IDLE, SENDING, PLAYING, NOT_CONFIRMED, FAILED, NEEDS_RECEIVER, UNKNOWN_FORMAT }
+enum class PlayPhase { IDLE, SCANNING, SENDING, PLAYING, NOT_CONFIRMED, FAILED, NEEDS_RECEIVER, NO_VIDEO, CHOOSE }
 
-data class PlayUi(val phase: PlayPhase = PlayPhase.IDLE, val message: String? = null)
+data class PlayUi(val phase: PlayPhase = PlayPhase.IDLE, val message: String? = null, val candidates: List<String> = emptyList())
 
 class PlayViewModel(app: Application) : AndroidViewModel(app) {
     private val player = ReceiverPlayer()
     private val pkg = ReceiverPackage.load(app)
+    private val scanner = PageScanner(app)
+    private var job: kotlinx.coroutines.Job? = null
     private val _ui = MutableStateFlow(PlayUi())
     val ui: StateFlow<PlayUi> = _ui.asStateFlow()
 
+    /** A direct video link plays straight away; a web page is scanned for video first. */
     fun play(ip: String?, rawUrl: String, forceMp4: Boolean = false) {
         if (ip == null) { fail("Add a Roku in the Rooms tab first."); return }
-        val url = normalize(rawUrl) ?: run { fail("Enter a video link that starts with http:// or https://."); return }
+        val url = normalize(rawUrl) ?: run { fail("Enter a link that starts with http:// or https://."); return }
         val format = ReceiverPlayer.formatFor(url) ?: if (forceMp4) "mp4" else null
-        if (format == null) {
-            _ui.value = PlayUi(PlayPhase.UNKNOWN_FORMAT,
-                "That doesn't look like a direct video file. The Roku can play links ending in .mp4, .m3u8 or .mpd, not web pages.")
-            return
+        if (format != null) { send(ip, url, format); return }
+        job?.cancel()
+        job = viewModelScope.launch {
+            _ui.value = PlayUi(PlayPhase.SCANNING, "Looking for video on that page… this can take up to 15 seconds.")
+            val found = try { scanner.scan(url) } catch (e: kotlinx.coroutines.CancellationException) { throw e } catch (_: Exception) { emptyList() }
+            when (found.size) {
+                0 -> _ui.value = PlayUi(PlayPhase.NO_VIDEO,
+                    "No playable video found on that page. Sites like YouTube, Netflix, Hulu and Disney+ protect their video or hide it inside their own player, so it can't be sent to a Roku this way. Try a page with an ordinary video, or a direct .mp4 / .m3u8 link.")
+                1 -> send(ip, found[0], ReceiverPlayer.formatFor(found[0]) ?: "mp4")
+                else -> _ui.value = PlayUi(PlayPhase.CHOOSE, "Found ${found.size} videos on that page. Pick one:", found)
+            }
         }
-        viewModelScope.launch {
+    }
+
+    fun playCandidate(ip: String?, url: String) {
+        if (ip == null) return
+        send(ip, url, ReceiverPlayer.formatFor(url) ?: "mp4")
+    }
+
+    fun cancel() {
+        job?.cancel()
+        _ui.value = PlayUi()
+    }
+
+    private fun send(ip: String, url: String, format: String) {
+        job?.cancel()
+        job = viewModelScope.launch {
             _ui.value = PlayUi(PlayPhase.SENDING, "Checking the receiver on your Roku…")
             val apps = try { RokuClient.apps(ip) } catch (_: IOException) { null }
             when (InstallPlanner.classify(apps, pkg)) {
