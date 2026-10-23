@@ -10,7 +10,7 @@ object HlsPlaylist {
         "#EXT-X-PART", "#EXT-X-PRELOAD-HINT", "#EXT-X-RENDITION-REPORT",
     )
 
-    fun looksLikePlaylist(body: String) = body.trimStart('﻿', ' ', '\n', '\r', '\t').startsWith("#EXTM3U")
+    fun looksLikePlaylist(body: String) = body.trimStart('\uFEFF', ' ', '\n', '\r', '\t').startsWith("#EXTM3U")
 
     fun isMaster(text: String) = text.lineSequence().any { it.startsWith("#EXT-X-STREAM-INF") }
 

@@ -88,3 +88,48 @@ class FailureClassifierTest {
         assertEquals(offers, PlaybackPlanner.usable(offers, roku))
     }
 }
+
+class PlaybackEndDetectorTest {
+    private var t = 0L
+    private fun det() = PlaybackEndDetector(maxMisses = 3, startGraceMs = 60_000) { t }
+
+    @Test fun endsAfterRepeatedNonPlayingReportsOncePlaybackWasSeen() {
+        val d = det()
+        assertFalse(d.onReport("buffer")); assertFalse(d.onReport("play")); assertFalse(d.onReport("pause"))
+        assertFalse(d.onReport("close")); assertFalse(d.onReport("close"))
+        assertTrue("third miss ends it", d.onReport("close"))
+    }
+
+    @Test fun aSingleBlipDoesNotEndPlayback() {
+        val d = det()
+        d.onReport("play")
+        assertFalse(d.onReport(null)); assertFalse(d.onReport("play"))
+        assertFalse(d.onReport(null)); assertFalse(d.onReport(null))
+    }
+
+    @Test fun neverStartedEndsOnlyAfterTheGracePeriod() {
+        val d = det()
+        t = 30_000; assertFalse(d.onReport("none"))
+        t = 61_000; assertTrue(d.onReport("none"))
+    }
+
+    @Test fun pausedPlaybackKeepsTheRelayAlive() {
+        val d = det()
+        d.onReport("play")
+        repeat(20) { assertFalse(d.onReport("pause")) }
+    }
+}
+
+class RelayFailureTest {
+    private fun why(req: Int, up: Map<Int, Int> = emptyMap(), drm: String? = null, r: com.mundymorning.couchcast.play.PlayResult = com.mundymorning.couchcast.play.PlayResult.NOT_STARTED, err: String? = null) =
+        RelayFailure.explain(req, up, drm, r, err)
+
+    @Test fun distinguishesRelayFailureFromDirectFailure() {
+        assertTrue("never reached the phone", why(0).contains("never contacted your phone"))
+        assertTrue(why(5, mapOf(403 to 2)).contains("refused the phone's request too"))
+        assertTrue(why(5, mapOf(404 to 1)).contains("no longer exists"))
+        assertTrue(why(5, mapOf(200 to 4), r = com.mundymorning.couchcast.play.PlayResult.STOPPED_EARLY).contains("couldn't play it"))
+        assertTrue(why(1, drm = "SAMPLE-AES").contains("copy-protected"))
+        assertTrue(why(1, err = "blocked: private or local network address").contains("outside the public internet"))
+    }
+}

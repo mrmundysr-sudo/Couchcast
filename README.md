@@ -16,6 +16,9 @@ Not yet built: lock-screen/tile/widget, casting, ad clock and billing, website.
 ## Play tab
 Paste a direct video link (`.mp4`, `.m3u8`, `.mpd`) or a web page and tap **Play on Roku**. For a web page the app loads it in a hidden WebView and collects the video requests the page's player makes plus its video tags (no DRM bypass; protected sites such as Netflix/Hulu/Disney+/YouTube are not supported); it plays one found video or lets you choose. The app checks the receiver is installed and current, sends the link with an ECP deep link (`/launch/dev?contentId=…` or `/input?…` if already running), then asks the Roku's `/query/media-player` and only says "playing" when the Roku does.
 
+## More ways to play (universal playback)
+Direct playback stays the default. When it can't work, Couch Cast offers: the official **Roku channel** for recognised streaming-service links, **screen mirroring** (guided, confirmed only when Android reports it), an **authenticated local phone relay** for ordinary MP4/HLS that needs request headers or a session, and **in-app sign-in** for members-only sites. See `docs/UNIVERSAL_PLAYBACK.md` for the design, security model and limits.
+
 ## Roku receiver installer
 Two different things: the **Android APK** (this app) and the **Roku receiver package** (`/receiver`, zipped into the APK as `assets/couchcast-receiver.zip` and uploaded to the TV).
 
