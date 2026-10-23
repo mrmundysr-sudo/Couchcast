@@ -16,7 +16,7 @@ import java.io.IOException
 
 enum class PlayPhase { IDLE, SCANNING, SENDING, PLAYING, NOT_CONFIRMED, FAILED, NEEDS_RECEIVER, NO_VIDEO, CHOOSE }
 
-data class PlayUi(val phase: PlayPhase = PlayPhase.IDLE, val message: String? = null, val candidates: List<String> = emptyList())
+data class PlayUi(val phase: PlayPhase = PlayPhase.IDLE, val message: String? = null, val candidates: List<String> = emptyList(), val chosen: String? = null)
 
 class PlayViewModel(app: Application) : AndroidViewModel(app) {
     private val player = ReceiverPlayer()
@@ -58,7 +58,7 @@ class PlayViewModel(app: Application) : AndroidViewModel(app) {
     private fun send(ip: String, url: String, format: String) {
         job?.cancel()
         job = viewModelScope.launch {
-            _ui.value = PlayUi(PlayPhase.SENDING, "Checking the receiver on your Roku…")
+            _ui.value = PlayUi(PlayPhase.SENDING, "Checking the receiver on your Roku…", chosen = url)
             val apps = try { RokuClient.apps(ip) } catch (_: IOException) { null }
             when (InstallPlanner.classify(apps, pkg)) {
                 ReceiverState.CURRENT -> {}
@@ -69,6 +69,7 @@ class PlayViewModel(app: Application) : AndroidViewModel(app) {
             }
             _ui.update { it.copy(message = "Sending the video to your Roku…") }
             val out = player.play(ip, url, format)
+            val chosenUrl = url
             _ui.value = when (out.result) {
                 PlayResult.PLAYING -> PlayUi(PlayPhase.PLAYING, "Confirmed: the Roku reports it is playing." + formatNote(out.last))
                 PlayResult.STOPPED_EARLY -> PlayUi(PlayPhase.FAILED, stoppedMessage(out))
@@ -76,7 +77,7 @@ class PlayViewModel(app: Application) : AndroidViewModel(app) {
                     "The receiver opened, but the Roku hasn't reported playing. Look at the TV: it shows the reason if the video failed. The link may need sign-in, or be a format the Roku can't play.")
                 PlayResult.NOT_STARTED -> PlayUi(PlayPhase.FAILED, "The Roku didn't start the receiver. Make sure the TV is on and try again.")
                 PlayResult.SEND_FAILED -> PlayUi(PlayPhase.FAILED, "The Roku didn't accept the command. Check Wi-Fi, and that network control is allowed on the TV.")
-            }
+            }.copy(chosen = chosenUrl)
         }
     }
 

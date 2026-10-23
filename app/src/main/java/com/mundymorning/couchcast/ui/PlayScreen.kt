@@ -84,6 +84,13 @@ fun PlayScreen(room: Room?, onInstall: () -> Unit, vm: PlayViewModel = viewModel
                 Text(it, color = color, fontSize = 14.sp)
             }
         }
+        ui.chosen?.let { link ->
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Video: " + com.mundymorning.couchcast.play.MediaLinks.label(link), fontSize = 12.sp,
+                    color = Color(0xFF8A8F9C), modifier = Modifier.weight(1f), maxLines = 1)
+                TextButton(onClick = { clipboard.setText(androidx.compose.ui.text.AnnotatedString(link)) }) { Text("Copy link") }
+            }
+        }
         when (ui.phase) {
             PlayPhase.NEEDS_RECEIVER -> Button(onClick = onInstall) { Text("Open the receiver installer") }
             PlayPhase.NO_VIDEO -> TextButton(onClick = { vm.play(room.ip, url, forceMp4 = true) }) { Text("Try the link itself as an MP4") }

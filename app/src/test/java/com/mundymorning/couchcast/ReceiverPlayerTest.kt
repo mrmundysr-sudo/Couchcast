@@ -62,6 +62,12 @@ class MediaLinksTest {
         assertEquals(listOf("https://cdn.x.com/a/master.m3u8?t=1", "http://x.com/v.MP4"), out)
     }
 
+    @Test fun prefersStreamingPlaylistsOverLooseMp4() {
+        val out = com.mundymorning.couchcast.play.MediaLinks.clean(listOf(
+            "https://x.com/ad.mp4", "https://x.com/main/master.m3u8?t=1", "https://x.com/preview.mp4", "https://x.com/v.mpd"))
+        assertEquals(listOf("https://x.com/main/master.m3u8?t=1", "https://x.com/v.mpd", "https://x.com/ad.mp4", "https://x.com/preview.mp4"), out)
+    }
+
     @Test fun labelsAreShort() {
         assertEquals("cdn.x.com / master.m3u8", com.mundymorning.couchcast.play.MediaLinks.label("https://cdn.x.com/a/b/master.m3u8?token=zzz"))
         assertTrue(com.mundymorning.couchcast.play.MediaLinks.label("https://x.com/" + "a".repeat(80) + ".mp4").length < 45)
