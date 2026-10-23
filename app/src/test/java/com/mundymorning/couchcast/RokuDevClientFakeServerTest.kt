@@ -21,6 +21,7 @@ class RokuDevClientFakeServerTest {
     private lateinit var server: MockWebServer
     @Volatile private var lastUpload = ""
     @Volatile private var reply = "<font color=\"red\">Install Success.</font>"
+    @Volatile private var dropReply = false
     private val nonce = "fakenonce123"
     private val password = "secret"
 
@@ -41,6 +42,7 @@ class RokuDevClientFakeServerTest {
                         .addHeader("WWW-Authenticate", "Digest realm=\"rokudev\", qop=\"auth\", nonce=\"$nonce\"")
                 }
                 lastUpload = request.body.readString(Charsets.ISO_8859_1)
+                if (dropReply) return MockResponse().setSocketPolicy(okhttp3.mockwebserver.SocketPolicy.DISCONNECT_AFTER_REQUEST)
                 return MockResponse().setBody(reply)
             }
         }
@@ -69,6 +71,12 @@ class RokuDevClientFakeServerTest {
     @Test fun compileFailureIsNotSuccess() = runBlocking {
         reply = "<font color=\"red\">Install Failure: Compilation Failed.</font>"
         assertTrue(client().install("127.0.0.1", "rokudev", password, "x".toByteArray()) is InstallOutcome.CompileFailed)
+    }
+
+    @Test fun lostReplyAfterUploadIsNotReportedAsSuccessOrPlainFailure() = runBlocking {
+        dropReply = true
+        val out = client().install("127.0.0.1", "rokudev", password, "x".toByteArray())
+        assertTrue("got $out", out is InstallOutcome.ResponseLost)
     }
 
     @Test fun probeSeesOpenAndClosedInstaller() = runBlocking {

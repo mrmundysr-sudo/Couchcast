@@ -284,6 +284,11 @@ class InstallViewModel(app: Application) : AndroidViewModel(app) {
                     store.restartPendingSince = 0
                     runCheck()
                 }
+                is InstallOutcome.ResponseLost -> {
+                    // The Roku may have installed and restarted its web server before replying.
+                    // Only the Roku's own app list can say, so check it.
+                    verifyInstalled(lostReply = out.detail) { if (remember) pwStore.save(ip, password) else pwStore.clear(ip) }
+                }
                 is InstallOutcome.Unreachable -> backToCredentials("Lost contact with the Roku: ${out.detail} Check that the TV is on and on the same Wi-Fi, then retry.")
                 is InstallOutcome.Unknown -> backToCredentials("${out.detail} Nothing has been confirmed, so please retry.")
             }
@@ -306,17 +311,22 @@ class InstallViewModel(app: Application) : AndroidViewModel(app) {
     private fun backToCredentials(msg: String) = setStep(Step.CREDENTIALS, error = msg)
 
     /** Success is only claimed when the Roku itself lists the receiver. */
-    fun verifyInstalled() {
+    fun verifyInstalled(lostReply: String? = null, onVerified: () -> Unit = {}) {
         val ip = _ui.value.ip ?: return
         job?.cancel()
         job = viewModelScope.launch {
-            setStep(Step.VERIFYING, error = null, busy = "Checking that the Roku lists the receiver…")
+            setStep(
+                Step.VERIFYING, error = null,
+                busy = if (lostReply != null) "The Roku didn't send a reply. Checking whether it installed anyway…"
+                else "Checking that the Roku lists the receiver…"
+            )
             repeat(8) {
                 val apps = try { RokuClient.apps(ip) } catch (_: IOException) { null }
                 val state = InstallPlanner.classify(apps, pkg)
                 if (state == ReceiverState.CURRENT) {
                     val v = apps?.firstOrNull { a -> a.id == InstallPlanner.DEV_APP_ID }?.version
                     store.lastVerifiedVersion = v
+                    onVerified()
                     _ui.update { it.copy(receiver = state, installedVersion = v, verified = true, testNote = null) }
                     setStep(Step.DONE)
                     return@launch
@@ -326,7 +336,10 @@ class InstallViewModel(app: Application) : AndroidViewModel(app) {
             _ui.update { it.copy(verified = false) }
             setStep(
                 Step.CREDENTIALS,
-                error = "The Roku accepted the file, but it isn't listing the receiver yet, so we can't confirm the install. Tap Check again, or retry the install."
+                error = if (lostReply != null)
+                    "The Roku dropped the connection during the install ($lostReply) and is not listing the receiver, so it did not install. Check that the TV is on, then retry."
+                else
+                    "The Roku accepted the file, but it isn't listing the receiver yet, so we can't confirm the install. Tap Check again, or retry the install."
             )
         }
     }

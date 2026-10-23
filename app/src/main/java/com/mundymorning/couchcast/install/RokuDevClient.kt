@@ -19,6 +19,8 @@ sealed class InstallOutcome {
     data class Rejected(val detail: String) : InstallOutcome()
     object InstallerClosed : InstallOutcome()
     data class Unreachable(val detail: String) : InstallOutcome()
+    /** The upload was sent but the Roku dropped the connection before replying. It may still have installed. */
+    data class ResponseLost(val detail: String) : InstallOutcome()
     data class Unknown(val detail: String) : InstallOutcome()
 }
 
@@ -58,6 +60,7 @@ class RokuDevClient(
 
     suspend fun install(ip: String, user: String, password: String, zip: ByteArray): InstallOutcome =
         withContext(Dispatchers.IO) {
+            var uploadStarted = false
             try {
                 // 1. Ask for a Digest challenge.
                 val challenge = probeHttp.newCall(Request.Builder().url(installerUrl(ip, "/plugin_install")).get().build())
@@ -68,17 +71,18 @@ class RokuDevClient(
                 val body = multipartBody(zip)
                 val auth = DigestAuth.authorization(user, password, "POST", "/plugin_install", challenge)
                 val req = Request.Builder().url(installerUrl(ip, "/plugin_install"))
-                    .header("Authorization", auth).post(body).build()
+                    .header("Authorization", auth).header("Connection", "close").post(body).build()
+                uploadStarted = true
                 uploadHttp.newCall(req).execute().use { r ->
                     val text = r.body?.string().orEmpty()
                     parseResponse(r.code, text)
                 }
             } catch (_: ConnectException) {
                 InstallOutcome.InstallerClosed
-            } catch (e: SocketTimeoutException) {
-                InstallOutcome.Unreachable("The Roku stopped answering while the file was uploading.")
             } catch (e: IOException) {
-                InstallOutcome.Unreachable(e.message ?: "Network error")
+                if (uploadStarted) InstallOutcome.ResponseLost(e.message ?: e.javaClass.simpleName)
+                else if (e is SocketTimeoutException) InstallOutcome.Unreachable("The Roku stopped answering.")
+                else InstallOutcome.Unreachable(e.message ?: "Network error")
             }
         }
 
