@@ -37,9 +37,12 @@ class ReceiverPlayer(
      * Starts playback and only reports PLAYING when the Roku says "play" and keeps saying it for [stableMs].
      * A stream that starts and then dies is reported as STOPPED_EARLY with the Roku's own format report.
      */
-    suspend fun play(ip: String, url: String, format: String, waitMs: Long = 20_000, stableMs: Long = 6_000): PlayOutcome {
+    suspend fun play(
+        ip: String, url: String, format: String, waitMs: Long = 20_000, stableMs: Long = 6_000,
+        referer: String? = null, userAgent: String? = null,
+    ): PlayOutcome {
         val running = dev.activeAppId(ip) == InstallPlanner.DEV_APP_ID
-        if (!post(ip, requestPath(running, url, format))) return PlayOutcome(PlayResult.SEND_FAILED)
+        if (!post(ip, requestPath(running, url, format, referer, userAgent))) return PlayOutcome(PlayResult.SEND_FAILED)
         val end = System.currentTimeMillis() + waitMs
         var last: PlayerInfo? = null
         var playingSince = 0L
@@ -92,14 +95,20 @@ class ReceiverPlayer(
             when (it) { "m3u8" -> "hls"; "mpd" -> "dash"; "mkv" -> "mkv"; else -> "mp4" }
         }
 
-        fun query(url: String, format: String): String {
+        /** Header values must be one line; anything else is dropped rather than risk injecting a header. */
+        private fun oneLine(v: String?): String? = v?.trim()?.takeIf { it.isNotEmpty() && it.none { c -> c == '\r' || c == '\n' } }
+
+        fun query(url: String, format: String, referer: String? = null, userAgent: String? = null): String {
             fun enc(s: String) = URLEncoder.encode(s, "UTF-8").replace("+", "%20")
-            return "contentId=${enc(url)}&mediaType=shortFormVideo&format=${enc(format)}"
+            val sb = StringBuilder("contentId=${enc(url)}&mediaType=shortFormVideo&format=${enc(format)}")
+            oneLine(referer)?.let { sb.append("&referer=").append(enc(it)) }
+            oneLine(userAgent)?.let { sb.append("&useragent=").append(enc(it.take(300))) }
+            return sb.toString()
         }
 
         /** Already running: deliver as an input event. Otherwise launch the dev channel with the link. */
-        fun requestPath(running: Boolean, url: String, format: String): String =
-            (if (running) "/input?" else "/launch/${InstallPlanner.DEV_APP_ID}?") + query(url, format)
+        fun requestPath(running: Boolean, url: String, format: String, referer: String? = null, userAgent: String? = null): String =
+            (if (running) "/input?" else "/launch/${InstallPlanner.DEV_APP_ID}?") + query(url, format, referer, userAgent)
 
         private fun attr(tag: String, name: String): String? =
             Regex("\\b$name=\"([^\"]*)\"").find(tag)?.groupValues?.get(1)

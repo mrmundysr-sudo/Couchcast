@@ -21,10 +21,13 @@ import kotlin.coroutines.resume
  * the requests the page's player actually makes (.m3u8/.mpd/.mp4) and the page's own video tags.
  * It does not look at, bypass or decrypt copy-protected (DRM) video.
  */
+/** Videos found on a page, plus what a browser would have sent when asking for them. */
+data class ScanResult(val urls: List<String>, val pageUrl: String, val userAgent: String)
+
 class PageScanner(private val context: Context) {
 
     @SuppressLint("SetJavaScriptEnabled")
-    suspend fun scan(pageUrl: String, totalMs: Long = 15_000, settleMs: Long = 3_000): List<String> =
+    suspend fun scan(pageUrl: String, totalMs: Long = 15_000, settleMs: Long = 3_000): ScanResult =
         withContext(Dispatchers.Main) {
             val network = Collections.synchronizedList(ArrayList<String>())
             val web = WebView(context)
@@ -56,7 +59,7 @@ class PageScanner(private val context: Context) {
                     if (any && firstFoundAt == 0L) firstFoundAt = System.currentTimeMillis()
                     if (firstFoundAt != 0L && System.currentTimeMillis() - firstFoundAt >= settleMs) break
                 }
-                MediaLinks.clean(network.toList() + dom)
+                ScanResult(MediaLinks.clean(network.toList() + dom), web.url?.takeIf { it.startsWith("http") } ?: pageUrl, web.settings.userAgentString.orEmpty())
             } finally {
                 web.stopLoading()
                 web.destroy()

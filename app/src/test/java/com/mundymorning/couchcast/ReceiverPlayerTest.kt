@@ -36,6 +36,16 @@ class ReceiverPlayerTest {
         assertTrue(q.endsWith("&mediaType=shortFormVideo&format=mp4"))
     }
 
+    @Test fun addsRefererAndUserAgentOnlyWhenGivenAndNeverFromMultiLineValues() {
+        val q = ReceiverPlayer.query("https://x.com/v.m3u8", "hls", "https://site.com/watch?id=1", "Mozilla/5.0 (Linux; Android 14)")
+        assertTrue(q, q.contains("&referer=https%3A%2F%2Fsite.com%2Fwatch%3Fid%3D1"))
+        assertTrue(q, q.contains("&useragent=Mozilla%2F5.0%20%28Linux%3B%20Android%2014%29"))
+        val none = ReceiverPlayer.query("https://x.com/v.m3u8", "hls")
+        assertTrue(none, !none.contains("referer") && !none.contains("useragent"))
+        val bad = ReceiverPlayer.query("https://x.com/v.m3u8", "hls", "https://a.com/\r\nX-Evil: 1", "ok\nbad")
+        assertTrue(bad, !bad.contains("referer") && !bad.contains("useragent") && !bad.contains("Evil"))
+    }
+
     @Test fun choosesInputWhenRunningAndLaunchOtherwise() {
         assertTrue(ReceiverPlayer.requestPath(true, "https://x.com/v.mp4", "mp4").startsWith("/input?contentId="))
         assertTrue(ReceiverPlayer.requestPath(false, "https://x.com/v.mp4", "mp4").startsWith("/launch/dev?contentId="))
@@ -113,6 +123,13 @@ class ReceiverPlayerFakeEcpTest {
         val r = player().play("127.0.0.1", "https://x.com/v.mp4", "mp4", waitMs = 3000, stableMs = 1500)
         assertEquals(PlayResult.PLAYING, r.result)
         assertTrue(seen.toString(), seen.any { it.startsWith("POST /launch/dev?contentId=https%3A%2F%2Fx.com%2Fv.mp4") })
+    }
+
+    @Test fun sendsPageHeadersToTheReceiverWhenGiven() = runBlocking {
+        val r = player().play("127.0.0.1", "https://x.com/v.m3u8", "hls", waitMs = 3000, stableMs = 1500,
+            referer = "https://site.com/watch", userAgent = "UA/1")
+        assertEquals(PlayResult.PLAYING, r.result)
+        assertTrue(seen.toString(), seen.any { it.contains("referer=https%3A%2F%2Fsite.com%2Fwatch") && it.contains("useragent=UA%2F1") })
     }
 
     @Test fun usesInputWhenReceiverAlreadyRunning() = runBlocking {

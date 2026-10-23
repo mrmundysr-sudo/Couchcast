@@ -13,6 +13,8 @@ sub onMediaRequest()
     content = createObject("roSGNode", "ContentNode")
     content.url = request.url
     content.streamFormat = streamFormatFor(request.format, request.url)
+    headers = buildHeaders(request.referer, request.useragent)
+    if headers.count() > 0 then content.HttpHeaders = headers
 
     m.status.text = "Loading video..."
     m.player.content = content
@@ -20,6 +22,39 @@ sub onMediaRequest()
     m.player.control = "play"
     m.player.setFocus(true)
 end sub
+
+' Some sites only serve a stream to requests that look like they came from the page that embeds it.
+' The app sends that page's address (and the browser's identity) only for videos it found by scanning a page.
+function buildHeaders(referer as Dynamic, userAgent as Dynamic) as Object
+    headers = []
+    ref = cleanHeader(referer)
+    if ref <> ""
+        headers.push("Referer: " + ref)
+        origin = originOf(ref)
+        if origin <> "" then headers.push("Origin: " + origin)
+    end if
+    ua = cleanHeader(userAgent)
+    if ua <> "" then headers.push("User-Agent: " + ua)
+    return headers
+end function
+
+function cleanHeader(v as Dynamic) as String
+    if v = invalid then return ""
+    t = type(v)
+    if t <> "roString" and t <> "String" then return ""
+    out = v
+    out = out.replace(chr(13), "")
+    out = out.replace(chr(10), "")
+    return out.trim()
+end function
+
+function originOf(url as String) as String
+    schemeEnd = Instr(1, url, "://")
+    if schemeEnd = 0 then return ""
+    slash = Instr(schemeEnd + 3, url, "/")
+    if slash = 0 then return url
+    return Left(url, slash - 1)
+end function
 
 function streamFormatFor(hint as Dynamic, url as String) as String
     t = ""

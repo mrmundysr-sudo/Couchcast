@@ -23,6 +23,7 @@ class PlayViewModel(app: Application) : AndroidViewModel(app) {
     private val pkg = ReceiverPackage.load(app)
     private val scanner = PageScanner(app)
     private var job: kotlinx.coroutines.Job? = null
+    private var lastScan: ScanResult? = null
     private val _ui = MutableStateFlow(PlayUi())
     val ui: StateFlow<PlayUi> = _ui.asStateFlow()
 
@@ -31,15 +32,17 @@ class PlayViewModel(app: Application) : AndroidViewModel(app) {
         if (ip == null) { fail("Add a Roku in the Rooms tab first."); return }
         val url = normalize(rawUrl) ?: run { fail("Enter a link that starts with http:// or https://."); return }
         val format = ReceiverPlayer.formatFor(url) ?: if (forceMp4) "mp4" else null
-        if (format != null) { send(ip, url, format); return }
+        if (format != null) { lastScan = null; send(ip, url, format); return }
         job?.cancel()
         job = viewModelScope.launch {
             _ui.value = PlayUi(PlayPhase.SCANNING, "Looking for video on that page… this can take up to 15 seconds.")
-            val found = try { scanner.scan(url) } catch (e: kotlinx.coroutines.CancellationException) { throw e } catch (_: Exception) { emptyList() }
+            val scan = try { scanner.scan(url) } catch (e: kotlinx.coroutines.CancellationException) { throw e } catch (_: Exception) { ScanResult(emptyList(), url, "") }
+            lastScan = scan
+            val found = scan.urls
             when (found.size) {
                 0 -> _ui.value = PlayUi(PlayPhase.NO_VIDEO,
                     "No playable video found on that page. Sites like YouTube, Netflix, Hulu and Disney+ protect their video or hide it inside their own player, so it can't be sent to a Roku this way. Try a page with an ordinary video, or a direct .mp4 / .m3u8 link.")
-                1 -> send(ip, found[0], ReceiverPlayer.formatFor(found[0]) ?: "mp4")
+                1 -> send(ip, found[0], ReceiverPlayer.formatFor(found[0]) ?: "mp4", scan.pageUrl, scan.userAgent)
                 else -> _ui.value = PlayUi(PlayPhase.CHOOSE, "Found ${found.size} videos on that page. Pick one:", found)
             }
         }
@@ -47,7 +50,7 @@ class PlayViewModel(app: Application) : AndroidViewModel(app) {
 
     fun playCandidate(ip: String?, url: String) {
         if (ip == null) return
-        send(ip, url, ReceiverPlayer.formatFor(url) ?: "mp4")
+        send(ip, url, ReceiverPlayer.formatFor(url) ?: "mp4", lastScan?.pageUrl, lastScan?.userAgent)
     }
 
     fun cancel() {
@@ -55,7 +58,7 @@ class PlayViewModel(app: Application) : AndroidViewModel(app) {
         _ui.value = PlayUi()
     }
 
-    private fun send(ip: String, url: String, format: String) {
+    private fun send(ip: String, url: String, format: String, referer: String? = null, userAgent: String? = null) {
         job?.cancel()
         job = viewModelScope.launch {
             _ui.value = PlayUi(PlayPhase.SENDING, "Checking the receiver on your Roku…", chosen = url)
@@ -68,7 +71,7 @@ class PlayViewModel(app: Application) : AndroidViewModel(app) {
                 ReceiverState.OTHER_DEV_APP -> { needsReceiver("A different sideloaded channel is on this Roku. Install the receiver first."); return@launch }
             }
             _ui.update { it.copy(message = "Sending the video to your Roku…") }
-            val out = player.play(ip, url, format)
+            val out = player.play(ip, url, format, referer = referer, userAgent = userAgent)
             val chosenUrl = url
             _ui.value = when (out.result) {
                 PlayResult.PLAYING -> PlayUi(PlayPhase.PLAYING, "Confirmed: the Roku reports it is playing." + formatNote(out.last))
