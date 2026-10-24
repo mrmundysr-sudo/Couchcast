@@ -33,3 +33,6 @@ Record pass/fail and the build number shown in the app. Anything that fails bloc
 21. Stop ends playback; disconnecting from the Cast dialog ends the session.
 22. Phone without Google Play services (if available): tab explains Cast is unavailable and the app does not crash.
 23. Repeat A1–A8 (Roku) - unchanged.
+
+Build 15 note: tapping the Cast icon crashed (activity theme was not AppCompat). Fixed in the next build; re-check item 16
+(icon visible on the dark theme, chooser opens) and that Roku screens look the same as before (A1-A8).
