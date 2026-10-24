@@ -1,12 +1,13 @@
 package com.mundymorning.couchcast
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.fragment.app.FragmentActivity
 import com.mundymorning.couchcast.ui.CouchcastApp
 
-class MainActivity : ComponentActivity() {
+/** FragmentActivity (a ComponentActivity) because the Cast device chooser is a dialog fragment. */
+class MainActivity : FragmentActivity() {
     private val vm: MainViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {

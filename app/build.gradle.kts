@@ -80,6 +80,9 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.coil.compose)
     implementation(libs.nanohttpd)
+    implementation(libs.androidx.fragment)
+    implementation(libs.androidx.mediarouter)
+    implementation(libs.cast.framework)
     testImplementation(libs.junit)
     testImplementation(libs.okhttp.mockwebserver)
 }

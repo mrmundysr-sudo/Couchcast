@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="cc_night">#0E1117</color>
-    <style name="Theme.Couchcast" parent="android:Theme.Material.NoActionBar">
+    <!-- AppCompat parent (dark, no action bar): the Cast device chooser is an AppCompatDialog and crashes on a plain
+         android:Theme.Material activity. The window colours below are unchanged, and the Compose UI draws its own. -->
+    <style name="Theme.Couchcast" parent="Theme.AppCompat.NoActionBar">
         <item name="android:windowBackground">@color/cc_night</item>
         <item name="android:statusBarColor">@color/cc_night</item>
         <item name="android:navigationBarColor">@color/cc_night</item>
