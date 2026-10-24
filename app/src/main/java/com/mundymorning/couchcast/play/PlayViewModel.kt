@@ -321,10 +321,5 @@ class PlayViewModel(app: Application) : AndroidViewModel(app) {
     private fun needsReceiver(msg: String) { _ui.value = PlayUi(PlayPhase.NEEDS_RECEIVER, msg) }
     private fun fail(msg: String) { _ui.value = PlayUi(PlayPhase.FAILED, msg) }
 
-    private fun normalize(raw: String): String? {
-        val t = raw.trim()
-        if (t.isEmpty() || t.any { it.isWhitespace() }) return null
-        val u = if (Regex("^(?i)https?://.+").matches(t)) t else if ("://" in t) return null else "https://$t"
-        return if (Regex("^(?i)https?://[^/\\s]+.*").matches(u)) u else null
-    }
+    private fun normalize(raw: String): String? = LinkInput.normalize(raw)
 }
