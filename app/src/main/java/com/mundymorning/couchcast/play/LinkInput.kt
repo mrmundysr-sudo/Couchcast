@@ -2,8 +2,8 @@ package com.mundymorning.couchcast.play
 
 /** Cleans up what the user typed or pasted into the link box. */
 object LinkInput {
-    /** A host name, IPv4 address or [IPv6 literal], with an optional port. Unicode letters allow international domains. */
-    private val BARE_AUTHORITY = Regex("""^([^@/\s]*@)?(\[[0-9A-Fa-f:.]+]|[\p{L}\p{N}._-]+)(:\d{1,5})?$""")
+    /** A host name, IPv4 address or [IPv6 literal], with an optional port. No user@ part: for that, type the https:// too. */
+    private val BARE_AUTHORITY = Regex("""^(\[[0-9A-Fa-f:.]+]|[\p{L}\p{N}._-]+)(:\d{1,5})?$""")
 
     /**
      * http(s) links only. A link typed with http:// or https:// is accepted exactly as before. A bare entry such as

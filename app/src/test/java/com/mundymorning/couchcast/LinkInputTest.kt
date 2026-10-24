@@ -19,7 +19,7 @@ class LinkInputTest {
         "http://192.168.1.20:8080/video.mp4", "https://user:pw@host.example/a.mp4", "http://[::1]:8080/a.m3u8",
         "https://cdn.example.co.uk/a/b/master.m3u8?token=abc", "https://bücher.de/film.mp4", "http://localhost:3000/x.mp4",
         "x.com/a", "x.com", "www.example.com/watch?v=1", "192.168.1.5:8080/v.mp4", "my_host-1.local/a.mp4",
-        "bücher.de/film", "[::1]:8080/v.mp4", "user@host.example/a", "example.com:443", "example.com?x=1", "example.com#frag",
+        "bücher.de/film", "[::1]:8080/v.mp4", "example.com:443", "example.com?x=1", "example.com#frag",
     )
 
     @Test fun validLinksBehaveExactlyAsBefore() {
@@ -34,7 +34,7 @@ class LinkInputTest {
     @Test fun rejectsEntriesThatAreNotHosts() {
         val bad = listOf(
             "javascript:alert(1)", "JavaScript:alert(document.cookie)", "javascript:void(0)", "data:text/html,<b>x</b>",
-            "mailto:a@b.com", "tel:5551234", "intent:#Intent;end", "javascript:alert(1)//@x.com", "x.com:abc/path", "host:99999999/a",
+            "mailto:a@b.com", "user@host.example/a", "tel:5551234", "intent:#Intent;end", "javascript:alert(1)//@x.com", "x.com:abc/path", "host:99999999/a",
             "ftp://x.com/v.mp4", "file:///sdcard/a.mp4", "content://media/1", "javascript://x.com/%0aalert(1)",
             "two words", "", "   ", "https://", "https:///a", "x y.com",
         )
