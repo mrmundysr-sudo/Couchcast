@@ -36,6 +36,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -231,6 +232,7 @@ private fun RestartStep(ui: InstallUi, vm: InstallViewModel) {
 private fun CredentialsStep(ui: InstallUi, vm: InstallViewModel) {
     var pw by remember { mutableStateOf("") }
     var remember by remember { mutableStateOf(false) }
+    var showPw by remember { mutableStateOf(false) }
     Text("5. Install the receiver", fontSize = 16.sp)
     Note("Developer Mode is ready on ${ui.roomName.ifBlank { ui.ip.orEmpty() }}. Roku only keeps one sideloaded channel; installing replaces any sideloaded channel already there.", Muted)
     when (ui.receiver) {
@@ -249,8 +251,9 @@ private fun CredentialsStep(ui: InstallUi, vm: InstallViewModel) {
     OutlinedTextField(
         value = pw, onValueChange = { pw = it }, singleLine = true,
         label = { Text("Developer password (username: rokudev)") },
-        visualTransformation = PasswordVisualTransformation(),
+        visualTransformation = if (showPw) VisualTransformation.None else PasswordVisualTransformation(),
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+        trailingIcon = { TextButton(onClick = { showPw = !showPw }) { Text(if (showPw) "Hide" else "Show") } },
         modifier = Modifier.fillMaxWidth(),
     )
     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -258,7 +261,7 @@ private fun CredentialsStep(ui: InstallUi, vm: InstallViewModel) {
         Spacer(Modifier.size(10.dp))
         Text("Remember on this phone (encrypted)", fontSize = 14.sp)
     }
-    Button(onClick = { vm.install(pw, remember); pw = "" }, enabled = !busy && pw.isNotEmpty(), modifier = Modifier.fillMaxWidth()) {
+    Button(onClick = { vm.install(pw, remember); pw = "" }, enabled = !busy && pw.isNotBlank(), modifier = Modifier.fillMaxWidth()) {
         Text(if (ui.receiver == ReceiverState.OUTDATED) "Update receiver" else "Install receiver")
     }
     OutlinedButton(onClick = { vm.runCheck() }, enabled = !busy) { Text("Check again") }

@@ -257,7 +257,9 @@ class InstallViewModel(app: Application) : AndroidViewModel(app) {
 
     // ---- install ---------------------------------------------------------------------------
 
-    fun install(password: String, remember: Boolean, replaceConfirmed: Boolean = false) {
+    fun install(typedPassword: String, remember: Boolean, replaceConfirmed: Boolean = false) {
+        // A stray space from a keyboard suggestion or paste is the easiest way to get "wrong password".
+        val password = typedPassword.trim()
         val ip = _ui.value.ip ?: return
         val state = _ui.value
         if (password.isEmpty()) {
