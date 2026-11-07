@@ -45,7 +45,7 @@ public enum DigestAuth {
         return s
     }
 
-    private static func randomCnonce() -> String { (0..<8).map { _ in String(format: "%02x", UInt8.random(in: 0...255)) }.joined() }
+    public static func randomCnonce() -> String { (0..<8).map { _ in String(format: "%02x", UInt8.random(in: 0...255)) }.joined() }
 }
 
 /// The Roku receiver channel as a ZIP sideload package (built from /receiver by tools/package_receiver.py).
