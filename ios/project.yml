@@ -1,0 +1,43 @@
+name: Couchcast
+options:
+  bundleIdPrefix: com.mundymorning
+  deploymentTarget:
+    iOS: "16.0"
+  createIntermediateGroups: true
+packages:
+  CouchcastCore:
+    path: CouchcastCore
+targets:
+  Couchcast:
+    type: application
+    platform: iOS
+    sources: [Couchcast]
+    dependencies:
+      - package: CouchcastCore
+    info:
+      path: Couchcast/Info.plist
+      properties:
+        CFBundleDisplayName: Couchcast
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        ITSAppUsesNonExemptEncryption: false
+        NSLocalNetworkUsageDescription: Couchcast talks to your Roku and shares the videos and photos you choose with it over your home Wi-Fi.
+        NSAppTransportSecurity:
+          NSAllowsArbitraryLoads: true
+          NSAllowsLocalNetworking: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.mundymorning.couchcast
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        TARGETED_DEVICE_FAMILY: "1"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        SWIFT_VERSION: "5.0"
+        GENERATE_INFOPLIST_FILE: NO
+schemes:
+  Couchcast:
+    build:
+      targets:
+        Couchcast: all

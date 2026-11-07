@@ -1,0 +1,42 @@
+name: Build iOS app
+
+on:
+  push:
+    branches: [main, 'claude/ios']
+    paths: ['ios/**', '.github/workflows/ios.yml']
+  workflow_dispatch:
+
+jobs:
+  ios:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Toolchain
+        run: |
+          xcodebuild -version
+          swift --version
+
+      - name: Core logic tests (Roku control, relay server, photo prep)
+        working-directory: ios/CouchcastCore
+        run: swift test
+
+      - name: Generate the Xcode project
+        working-directory: ios
+        run: |
+          brew install xcodegen
+          xcodegen generate
+
+      - name: Build for the iPhone simulator (no signing)
+        working-directory: ios
+        run: |
+          xcodebuild build -project Couchcast.xcodeproj -scheme Couchcast \
+            -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Build for iPhone hardware (no signing)
+        working-directory: ios
+        run: |
+          xcodebuild build -project Couchcast.xcodeproj -scheme Couchcast \
+            -sdk iphoneos -destination 'generic/platform=iOS' \
+            CODE_SIGNING_ALLOWED=NO
