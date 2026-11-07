@@ -69,7 +69,9 @@ public struct ReceiverPlayer {
     static func enc(_ s: String) -> String { s.addingPercentEncoding(withAllowedCharacters: unreserved) ?? "" }
 
     private static func oneLine(_ v: String?) -> String? {
-        guard let t = v?.trimmingCharacters(in: .whitespaces), !t.isEmpty, !t.contains("\r"), !t.contains("\n") else { return nil }
+        // "\r\n" is ONE Character in Swift, so check the unicode scalars: a header value must be a single line.
+        guard let t = v?.trimmingCharacters(in: .whitespaces), !t.isEmpty,
+              !t.unicodeScalars.contains(where: { $0 == "\r" || $0 == "\n" }) else { return nil }
         return t
     }
 
