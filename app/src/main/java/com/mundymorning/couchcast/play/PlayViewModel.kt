@@ -10,11 +10,13 @@ import com.mundymorning.couchcast.playback.*
 import com.mundymorning.couchcast.receiver.PlayRequest
 import com.mundymorning.couchcast.receiver.Receiver
 import com.mundymorning.couchcast.receiver.RokuReceiver
+import com.mundymorning.couchcast.relay.FileLocalSource
 import com.mundymorning.couchcast.relay.Relay
 import com.mundymorning.couchcast.relay.RelayOpen
 import com.mundymorning.couchcast.relay.RelaySpec
 import com.mundymorning.couchcast.relay.RelayService
 import com.mundymorning.couchcast.relay.RequestContext
+import com.mundymorning.couchcast.relay.UriLocalSource
 import com.mundymorning.couchcast.roku.RokuApp
 import com.mundymorning.couchcast.roku.RokuClient
 import com.mundymorning.couchcast.signin.AndroidCookieSource
@@ -23,6 +25,9 @@ import com.mundymorning.couchcast.signin.SiteSessions
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -119,15 +124,7 @@ class PlayViewModel(app: Application) : AndroidViewModel(app) {
         job?.cancel()
         job = viewModelScope.launch {
             _ui.value = PlayUi(PlayPhase.SENDING, "Checking the receiver on your Roku…", chosen = url, status = PlaybackStatus.CHECKING)
-            val apps = try { RokuClient.apps(ip) } catch (_: IOException) { null }
-            receiverInstalled = if (apps == null) null else InstallPlanner.classify(apps, pkg) == ReceiverState.CURRENT
-            when (InstallPlanner.classify(apps, pkg)) {
-                ReceiverState.CURRENT -> {}
-                ReceiverState.UNKNOWN -> { fail("Couldn't reach the Roku. Check that the TV is on and on the same Wi-Fi."); return@launch }
-                ReceiverState.NONE -> { needsReceiver("The Couchcast Receiver isn't installed on this Roku yet."); return@launch }
-                ReceiverState.OUTDATED -> { needsReceiver("The receiver on this Roku is out of date. Update it first."); return@launch }
-                ReceiverState.OTHER_DEV_APP -> { needsReceiver("A different sideloaded channel is on this Roku. Install the receiver first."); return@launch }
-            }
+            if (!ensureReceiver(ip)) return@launch
             _ui.update { it.copy(message = "Sending the video to your Roku…") }
             val out = receiver.play(ip, PlayRequest(url, format, referer, userAgent))
             val chosenUrl = url
@@ -143,6 +140,21 @@ class PlayViewModel(app: Application) : AndroidViewModel(app) {
             _ui.update { it.copy(details = it.details + "Direct playback: ${out.result} (${Redactor.url(chosenUrl)})") }
             if (out.result == PlayResult.STOPPED_EARLY || out.result == PlayResult.RECEIVER_OPEN_NOT_CONFIRMED) diagnose(ip, chosenUrl, referer, userAgent)
         }
+    }
+
+    /** True when the current receiver is on the Roku; otherwise puts the reason (and the installer offer) on screen. */
+    private suspend fun ensureReceiver(ip: String): Boolean {
+        val apps = try { RokuClient.apps(ip) } catch (_: IOException) { null }
+        val state = InstallPlanner.classify(apps, pkg)
+        receiverInstalled = if (apps == null) null else state == ReceiverState.CURRENT
+        when (state) {
+            ReceiverState.CURRENT -> return true
+            ReceiverState.UNKNOWN -> fail("Couldn't reach the Roku. Check that the TV is on and on the same Wi-Fi.")
+            ReceiverState.NONE -> needsReceiver("The Couchcast Receiver isn't installed on this Roku yet.")
+            ReceiverState.OUTDATED -> needsReceiver("The receiver on this Roku is out of date. Update it first.")
+            ReceiverState.OTHER_DEV_APP -> needsReceiver("A different sideloaded channel is on this Roku. Install the receiver first.")
+        }
+        return false
     }
 
     private fun formatNote(i: PlayerInfo?): String {
@@ -295,8 +307,107 @@ class PlayViewModel(app: Application) : AndroidViewModel(app) {
     private fun endRelay() {
         relayKey?.let { Relay.manager.close(it) }
         relayKey = null
+        photoFile?.delete()   // a private photo shouldn't linger in the cache
+        photoFile = null
         RelayService.stop(getApplication())
         _ui.update { it.copy(relay = RelayState.OFF) }
+    }
+
+    // ---- Cast a video or photo stored on the phone ---------------------------------------------
+
+    private var photoFile: java.io.File? = null
+
+    /**
+     * Casts a picked video or photo. Videos are served to the Roku straight from the phone (seekable, nothing copied);
+     * photos are first re-encoded as a 1080p JPEG so any Roku can show them. Both use the same local relay: only that
+     * file, only to this Roku, only with an unguessable address.
+     */
+    fun playLocal(ip: String?, uri: android.net.Uri) {
+        if (ip == null) { fail("Add a Roku in the Rooms tab first."); return }
+        val app = getApplication<Application>()
+        val pick = LocalMedia.describe(app, uri) ?: run { fail("That file isn't a video or a photo. Pick a video or a photo."); return }
+        val phoneIp = lanIp() ?: run { fail("Connect your phone to the same Wi-Fi as the Roku to cast from the phone."); return }
+        diagJob?.cancel()
+        lastScan = null
+        lastEntered = null
+        job?.cancel()
+        job = viewModelScope.launch {
+            endRelay()
+            _ui.value = PlayUi(PlayPhase.SENDING, "Checking the receiver on your Roku…", status = PlaybackStatus.CHECKING)
+            if (!ensureReceiver(ip)) return@launch
+            when (pick.kind) {
+                LocalKind.VIDEO -> castLocalVideo(ip, phoneIp, pick)
+                LocalKind.PHOTO -> castLocalPhoto(ip, phoneIp, pick)
+            }
+        }
+    }
+
+    private suspend fun castLocalVideo(ip: String, phoneIp: String, pick: LocalPick) {
+        val app = getApplication<Application>()
+        _ui.value = PlayUi(PlayPhase.SENDING, "Sending ${pick.name} to your Roku…", status = PlaybackStatus.STARTING_RELAY, relay = RelayState.STARTING)
+        val source = UriLocalSource(app, pick.uri, pick.name, pick.mime.ifBlank { "video/mp4" }, pick.size)
+        val format = LocalMediaType.videoFormat(pick.mime, pick.name)
+        when (val o = Relay.manager.openLocal(phoneIp, ip, source, LocalMediaType.videoExt(pick.mime, pick.name), format)) {
+            is RelayOpen.Refused -> fail(o.reason)
+            is RelayOpen.Ready -> {
+                relayKey = o.key
+                RelayService.start(app, ip)
+                val out = receiver.play(ip, PlayRequest(o.playUrl, o.format))
+                val stats = Relay.manager.stats(o.key)
+                val line = "Phone video: ${out.result} (${stats?.summary().orEmpty()})"
+                if (out.result == PlayResult.PLAYING) {
+                    _ui.value = PlayUi(PlayPhase.PLAYING,
+                        "Playing ${pick.name} from your phone." + formatNote(out.last) +
+                            " Keep the phone on the same Wi-Fi, powered on, until the video ends. Remote pause and seek work as usual.",
+                        status = PlaybackStatus.PLAYING_RELAY, relay = RelayState.ACTIVE, details = listOf(line))
+                } else {
+                    val why = LocalMediaType.videoFailure(out.result, stats?.requests?.get() ?: 0, out.playedSeconds, out.last)
+                    endRelay()
+                    _ui.value = PlayUi(if (out.result == PlayResult.RECEIVER_OPEN_NOT_CONFIRMED) PlayPhase.NOT_CONFIRMED else PlayPhase.FAILED,
+                        why, status = PlaybackStatus.FAILED, details = listOf(line))
+                }
+            }
+        }
+    }
+
+    private suspend fun castLocalPhoto(ip: String, phoneIp: String, pick: LocalPick) {
+        val app = getApplication<Application>()
+        _ui.value = PlayUi(PlayPhase.SENDING, "Preparing the photo…", status = PlaybackStatus.CHECKING)
+        val file = java.io.File(app.cacheDir, "cast/photo.jpg")
+        photoFile = file
+        try {
+            withContext(Dispatchers.IO) { PhotoPrep.toJpeg(app, pick.uri, file) }
+        } catch (e: kotlinx.coroutines.CancellationException) { throw e } catch (_: Exception) {
+            file.delete()
+            fail("Couldn't read that picture. Try another one, or a JPEG or PNG.")
+            return
+        }
+        val source = FileLocalSource(file, "image/jpeg", pick.name)
+        when (val o = Relay.manager.openLocal(phoneIp, ip, source, "jpg", ReceiverPlayer.PHOTO_FORMAT)) {
+            is RelayOpen.Refused -> { file.delete(); fail(o.reason) }
+            is RelayOpen.Ready -> {
+                relayKey = o.key
+                _ui.update { it.copy(message = "Sending the photo to your Roku…") }
+                val sent = receiver.show(ip, PlayRequest(o.playUrl, o.format))
+                // A photo has no player state to read. The proof is the Roku downloading the whole file from the phone.
+                var fetched = false
+                if (sent) {
+                    val deadline = System.currentTimeMillis() + 20_000
+                    while (System.currentTimeMillis() < deadline) {
+                        if ((Relay.manager.stats(o.key)?.bytes?.get() ?: 0L) >= file.length()) { fetched = true; break }
+                        delay(400)
+                    }
+                }
+                val line = "Phone photo: ${if (!sent) "not accepted" else if (fetched) "downloaded by the Roku" else "not downloaded"} (${Relay.manager.stats(o.key)?.summary().orEmpty()})"
+                endRelay()   // the Roku holds the picture now; the phone no longer has to stay on
+                _ui.value = when {
+                    !sent -> PlayUi(PlayPhase.FAILED, "The Roku didn't accept the command. Check Wi-Fi, and that network control is allowed on the TV.", details = listOf(line))
+                    fetched -> PlayUi(PlayPhase.PLAYING, "Sent ${pick.name}. The Roku has the photo and should be showing it; the TV shows a reason if it couldn't.",
+                        status = PlaybackStatus.SHOWING_PHOTO, details = listOf(line))
+                    else -> PlayUi(PlayPhase.NOT_CONFIRMED, LocalMediaType.photoNotFetched(), details = listOf(line))
+                }
+            }
+        }
     }
 
     // ---- 4. Sites and sign-in ------------------------------------------------------------------

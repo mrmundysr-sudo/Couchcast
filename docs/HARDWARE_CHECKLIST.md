@@ -36,3 +36,13 @@ Record pass/fail and the build number shown in the app. Anything that fails bloc
 
 Build 15 note: tapping the Cast icon crashed (activity theme was not AppCompat). Fixed in the next build; re-check item 16
 (icon visible on the dark theme, chooser opens) and that Roku screens look the same as before (A1-A8).
+
+## E. Cast from phone (`claude/affectionate-curie-usoym1`)
+24. Play tab: the app asks you to update the receiver (now 1.0.00005); the installer wizard completes.
+25. "Cast a video or photo from this phone" opens the picker. Pick a short phone-recorded video: Roku plays, app says "Confirmed"; notification visible.
+26. Seek with the Remote tab (fast-forward / rewind) works. Try a long (>5 min) video and a video from the Downloads folder.
+27. Pick a portrait photo: shown upright and full screen on the TV; app says the Roku has the photo; notification does not stay.
+28. Pick a HEIC photo and a large (12 MP+) photo, and a transparent PNG (should have a white background).
+29. Back on the Roku and Stop in the app both clear the photo/video.
+30. Phone on mobile data only (Wi-Fi off): clear "connect to the same Wi-Fi" message. Guest-network/isolated Wi-Fi: "Roku never downloaded it" message.
+31. Cast a photo then a video, then a video then a photo, without leaving the tab: each replaces the last.

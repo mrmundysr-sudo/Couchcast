@@ -9,6 +9,7 @@ import android.os.PowerManager
 import android.provider.Settings
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -103,6 +104,10 @@ private fun PlayMain(vm: PlayViewModel, room: Room, onInstall: () -> Unit, go: (
     val ctx = LocalContext.current
     val clipboard = LocalClipboardManager.current
     val busy = ui.phase == PlayPhase.SENDING || ui.phase == PlayPhase.SCANNING
+    // The system photo picker: no storage permission needed, the app only gets the one file the user taps.
+    val pickFromPhone = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+        if (uri != null) vm.playLocal(room.ip, uri)
+    }
     val notifications = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { vm.tryRelay(room.ip) }
 
     LaunchedEffect(url, room.ip) { vm.onLinkChanged(url, room.ip) }
@@ -113,7 +118,7 @@ private fun PlayMain(vm: PlayViewModel, room: Room, onInstall: () -> Unit, go: (
     ) {
         Text("Play a video on ${room.name}", fontSize = 18.sp)
         Text(
-            "Paste a video link or a web page that has a video on it. The app finds the video and plays it through the Couchcast Receiver on your Roku. Sites that copy-protect their video (Netflix, Hulu, Disney+, YouTube and similar) can't be played this way, but the app can open their own Roku channel.",
+            "Paste a video link or a web page that has a video on it, or cast a video or photo from this phone. The app finds the video and plays it through the Couchcast Receiver on your Roku. Sites that copy-protect their video (Netflix, Hulu, Disney+, YouTube and similar) can't be played this way, but the app can open their own Roku channel.",
             fontSize = 13.sp, color = Muted,
         )
         OutlinedTextField(
@@ -128,6 +133,11 @@ private fun PlayMain(vm: PlayViewModel, room: Room, onInstall: () -> Unit, go: (
                 Text("Play on Roku")
             }
         }
+
+        OutlinedButton(
+            onClick = { pickFromPhone.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageAndVideo)) },
+            enabled = !busy, modifier = Modifier.fillMaxWidth(),
+        ) { Text("Cast a video or photo from this phone") }
 
         // Recognised streaming service: offer its official Roku channel; ordinary stream-finding stays available above.
         link.service?.let { match -> ServiceCard(match, link.channel, busy) { vm.openChannel(room.ip, match) } }
@@ -240,7 +250,7 @@ private fun Card2(content: @Composable () -> Unit) {
 }
 
 private fun statusColor(s: PlaybackStatus) = when (s) {
-    PlaybackStatus.PLAYING_DIRECT, PlaybackStatus.PLAYING_RELAY, PlaybackStatus.CHANNEL_OPEN, PlaybackStatus.MIRRORING -> Good
+    PlaybackStatus.PLAYING_DIRECT, PlaybackStatus.PLAYING_RELAY, PlaybackStatus.SHOWING_PHOTO, PlaybackStatus.CHANNEL_OPEN, PlaybackStatus.MIRRORING -> Good
     PlaybackStatus.FAILED, PlaybackStatus.SIGN_IN_REQUIRED, PlaybackStatus.UNSUPPORTED_PROTECTED -> Bad
     else -> Muted
 }

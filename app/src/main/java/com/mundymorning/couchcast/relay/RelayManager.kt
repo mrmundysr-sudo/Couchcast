@@ -1,5 +1,6 @@
 package com.mundymorning.couchcast.relay
 
+import com.mundymorning.couchcast.playback.CookieSource
 import com.mundymorning.couchcast.playback.UpstreamPolicy
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
@@ -49,11 +50,7 @@ class RelayManager(
         }
         if (byKey.size >= MAX_SESSIONS) return RelayOpen.Refused("Another relay is already running. Stop it first.")
 
-        if (server != null && boundTo != spec.bindHost) shutdown()
-        val srv = server ?: serverFactory(spec.bindHost) { byToken[it] }.also {
-            it.start(30_000, false)
-            server = it; boundTo = spec.bindHost
-        }
+        val srv = ensureServer(spec.bindHost)
         val session = RelaySession(
             RelaySession.newToken(), RelayServer.normalizeIp(spec.clientIp), spec.sourceUrl, spec.context,
             privateOk, "http://${spec.bindHost}:${srv.listeningPort}", now,
@@ -64,6 +61,35 @@ class RelayManager(
         val playUrl = session.relayUrlFor(spec.sourceUrl)
         onChange?.invoke()
         return RelayOpen.Ready(key, playUrl, spec.format)
+    }
+
+    /**
+     * Serves a file that lives on the phone (a picked video, or a photo prepared for the TV) to the Roku, with the same
+     * protections as a web relay: unguessable token, only that Roku's address, only this one file.
+     */
+    @Synchronized
+    fun openLocal(bindHost: String, clientIp: String, source: LocalSource, ext: String, format: String): RelayOpen {
+        if (byKey.size >= MAX_SESSIONS) return RelayOpen.Refused("Another relay is already running. Stop it first.")
+        val srv = ensureServer(bindHost)
+        val session = RelaySession(
+            RelaySession.newToken(), RelayServer.normalizeIp(clientIp), "local-file",
+            RequestContext(null, null, CookieSource.NONE, false, emptySet()),
+            emptySet(), "http://$bindHost:${srv.listeningPort}", now,
+        )
+        byToken[session.token] = session
+        val key = keys.getAndIncrement()
+        byKey[key] = session
+        val playUrl = session.localUrlFor(source, ext)
+        onChange?.invoke()
+        return RelayOpen.Ready(key, playUrl, format)
+    }
+
+    private fun ensureServer(bindHost: String): RelayServer {
+        if (server != null && boundTo != bindHost) shutdown()
+        return server ?: serverFactory(bindHost) { byToken[it] }.also {
+            it.start(30_000, false)
+            server = it; boundTo = bindHost
+        }
     }
 
     fun stats(key: Int): RelayStats? = byKey[key]?.stats

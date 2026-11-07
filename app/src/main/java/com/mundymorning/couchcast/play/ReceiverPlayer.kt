@@ -68,6 +68,15 @@ class ReceiverPlayer(
         return PlayOutcome(PlayResult.PLAYING, last)
     }
 
+    /**
+     * Sends a photo address to the receiver, which shows it full screen. A photo has no playback state to confirm, so this only
+     * reports whether the Roku accepted the command; the caller confirms by seeing the Roku download the file.
+     */
+    suspend fun showPhoto(ip: String, url: String): Boolean {
+        val running = dev.activeAppId(ip) == InstallPlanner.DEV_APP_ID
+        return post(ip, requestPath(running, url, PHOTO_FORMAT, mediaType = PHOTO_MEDIA_TYPE))
+    }
+
     private suspend fun post(ip: String, path: String): Boolean = withContext(Dispatchers.IO) {
         try {
             val req = Request.Builder().url("http://$ip:$ecpPort$path").post(ByteArray(0).toRequestBody(null)).build()
@@ -98,17 +107,21 @@ class ReceiverPlayer(
         /** Header values must be one line; anything else is dropped rather than risk injecting a header. */
         private fun oneLine(v: String?): String? = v?.trim()?.takeIf { it.isNotEmpty() && it.none { c -> c == '\r' || c == '\n' } }
 
-        fun query(url: String, format: String, referer: String? = null, userAgent: String? = null): String {
+        const val PHOTO_FORMAT = "photo"
+        const val PHOTO_MEDIA_TYPE = "photo"
+
+        fun query(url: String, format: String, referer: String? = null, userAgent: String? = null, mediaType: String = "shortFormVideo"): String {
             fun enc(s: String) = URLEncoder.encode(s, "UTF-8").replace("+", "%20")
-            val sb = StringBuilder("contentId=${enc(url)}&mediaType=shortFormVideo&format=${enc(format)}")
+            val sb = StringBuilder("contentId=${enc(url)}&mediaType=${enc(mediaType)}&format=${enc(format)}")
             oneLine(referer)?.let { sb.append("&referer=").append(enc(it)) }
             oneLine(userAgent)?.let { sb.append("&useragent=").append(enc(it.take(300))) }
             return sb.toString()
         }
 
         /** Already running: deliver as an input event. Otherwise launch the dev channel with the link. */
-        fun requestPath(running: Boolean, url: String, format: String, referer: String? = null, userAgent: String? = null): String =
-            (if (running) "/input?" else "/launch/${InstallPlanner.DEV_APP_ID}?") + query(url, format, referer, userAgent)
+        fun requestPath(
+            running: Boolean, url: String, format: String, referer: String? = null, userAgent: String? = null, mediaType: String = "shortFormVideo",
+        ): String = (if (running) "/input?" else "/launch/${InstallPlanner.DEV_APP_ID}?") + query(url, format, referer, userAgent, mediaType)
 
         private fun attr(tag: String, name: String): String? =
             Regex("\\b$name=\"([^\"]*)\"").find(tag)?.groupValues?.get(1)

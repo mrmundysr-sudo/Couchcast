@@ -55,6 +55,18 @@ class RelaySession(
     }
 
     fun lookup(id: Int): String? = table[id]
+
+    private val locals = ConcurrentHashMap<Int, LocalSource>()
+
+    /** A file on this phone (not a web address). It is served only by this session, to this session's Roku. */
+    fun localUrlFor(source: LocalSource, ext: String): String {
+        val id = ids.getAndIncrement()
+        locals[id] = source
+        val clean = ext.lowercase().takeIf { it.length in 2..5 && it.all { c -> c.isLetterOrDigit() } }
+        return "$baseUrl/r/$token/$id" + (clean?.let { ".$it" } ?: "")
+    }
+
+    fun localLookup(id: Int): LocalSource? = locals[id]
     fun touch() { lastActivity = now() }
 
     fun relayUrlFor(url: String): String {

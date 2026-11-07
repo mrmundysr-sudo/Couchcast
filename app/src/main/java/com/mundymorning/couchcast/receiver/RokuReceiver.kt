@@ -21,6 +21,8 @@ class RokuReceiver(
     override suspend fun play(address: String, request: PlayRequest): PlayOutcome =
         player.play(address, request.url, request.format, waitMs, stableMs, request.referer, request.userAgent)
 
+    override suspend fun show(address: String, request: PlayRequest): Boolean = player.showPhoto(address, request.url)
+
     override suspend fun playerInfo(address: String): PlayerInfo? = player.playerInfo(address)
 
     /** The receiver channel stops its video on Back. */

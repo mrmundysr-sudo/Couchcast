@@ -23,6 +23,8 @@ interface Receiver {
     val platform: ReceiverPlatform
     suspend fun play(address: String, request: PlayRequest): PlayOutcome
     suspend fun playerInfo(address: String): PlayerInfo?
+    /** Shows a photo full screen. Returns true when the device accepted the command; false when it can't or didn't. */
+    suspend fun show(address: String, request: PlayRequest): Boolean = false
     /** Best-effort stop; returns false if the device could not be reached. */
     suspend fun stop(address: String): Boolean
 }

@@ -1,5 +1,6 @@
 ' Couchcast Receiver - entry point.
-' Launch with deep link parameters: /launch/dev?contentId=<url>&mediaType=shortFormVideo&format=hls|dash|mp4|mkv[&referer=<page>&useragent=<ua>]
+' Launch with deep link parameters: /launch/dev?contentId=<url>&mediaType=shortFormVideo&format=hls|dash|mp4|mkv|photo[&referer=<page>&useragent=<ua>]
+' mediaType=photo (format=photo) shows a still picture full screen instead of playing video.
 ' While running, the same parameters arrive as an roInput event (ECP POST /input).
 sub Main(args as Dynamic)
     screen = CreateObject("roSGScreen")
@@ -12,7 +13,7 @@ sub Main(args as Dynamic)
     input.setMessagePort(port)
 
     if args <> invalid and args.contentId <> invalid
-        scene.mediaRequest = { url: args.contentId, format: args.format, referer: args.referer, useragent: args.useragent }
+        scene.mediaRequest = { url: args.contentId, format: args.format, mediaType: args.mediaType, referer: args.referer, useragent: args.useragent }
     end if
 
     while true
@@ -23,7 +24,7 @@ sub Main(args as Dynamic)
         else if msgType = "roInputEvent"
             info = msg.getInfo()
             if info <> invalid and info.contentId <> invalid
-                scene.mediaRequest = { url: info.contentId, format: info.format, referer: info.referer, useragent: info.useragent }
+                scene.mediaRequest = { url: info.contentId, format: info.format, mediaType: info.mediaType, referer: info.referer, useragent: info.useragent }
             end if
         end if
     end while

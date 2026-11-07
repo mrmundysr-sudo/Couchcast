@@ -2,6 +2,8 @@ sub init()
     m.title = m.top.findNode("title")
     m.status = m.top.findNode("status")
     m.player = m.top.findNode("player")
+    m.photo = m.top.findNode("photo")
+    m.photo.observeField("loadStatus", "onPhotoStatus")
     m.player.observeField("state", "onPlayerState")
     m.top.setFocus(true)
 end sub
@@ -9,6 +11,12 @@ end sub
 sub onMediaRequest()
     request = m.top.mediaRequest
     if request = invalid or request.url = invalid then return
+
+    if isPhotoRequest(request)
+        showPhoto(request.url)
+        return
+    end if
+    m.photo.visible = false
 
     content = createObject("roSGNode", "ContentNode")
     content.url = request.url
@@ -21,6 +29,34 @@ sub onMediaRequest()
     m.player.visible = true
     m.player.control = "play"
     m.player.setFocus(true)
+end sub
+
+function isPhotoRequest(request as Object) as Boolean
+    if request.mediaType <> invalid and LCase(request.mediaType) = "photo" then return true
+    if request.format <> invalid and LCase(request.format) = "photo" then return true
+    return false
+end function
+
+' A still picture from the phone. The Roku downloads it from the phone's relay and shows it full screen.
+sub showPhoto(url as String)
+    m.player.control = "stop"
+    m.player.visible = false
+    m.status.text = "Loading photo..."
+    m.photo.uri = ""
+    m.photo.uri = url
+    m.photo.visible = true
+    m.top.setFocus(true)
+end sub
+
+sub onPhotoStatus()
+    if not m.photo.visible then return
+    status = m.photo.loadStatus
+    if status = "ready"
+        m.title.visible = false
+        m.status.visible = false
+    else if status = "failed"
+        showIdle("This photo could not be shown." + chr(10) + "Send it again from the Couchcast app.")
+    end if
 end sub
 
 ' Some sites only serve a stream to requests that look like they came from the page that embeds it.
@@ -102,12 +138,16 @@ end function
 sub showIdle(text as String)
     m.player.control = "stop"
     m.player.visible = false
+    m.photo.visible = false
+    m.photo.uri = ""
+    m.title.visible = true
+    m.status.visible = true
     m.status.text = text
     m.top.setFocus(true)
 end sub
 
 function onKeyEvent(key as String, press as Boolean) as Boolean
-    if press and key = "back" and m.player.visible
+    if press and key = "back" and (m.player.visible or m.photo.visible)
         showIdle("Stopped. Send another video from the Couchcast app.")
         return true
     end if

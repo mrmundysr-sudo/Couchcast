@@ -10,6 +10,7 @@ enum class PlaybackStatus(val label: String) {
     CHANNEL_NOT_CONFIRMED("Sent to the Roku channel (not confirmed)"),
     MIRRORING("Screen mirroring"),
     MIRROR_NOT_CONFIRMED("Mirroring not confirmed"),
+    SHOWING_PHOTO("Showing photo on TV"),
     STARTING_RELAY("Starting phone relay…"),
     PLAYING_RELAY("Playing through phone relay"),
     SIGN_IN_REQUIRED("Sign-in required"),

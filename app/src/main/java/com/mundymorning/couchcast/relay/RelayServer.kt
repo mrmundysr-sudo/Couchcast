@@ -41,6 +41,14 @@ class RelayServer(
         if (normalizeIp(req.headers["remote-addr"]) != session.clientIp) return plain(403, "Forbidden")
         if (req.method != Method.GET && req.method != Method.HEAD) return plain(405, "Method Not Allowed")
         val id = parts[2].substringBefore('.').toIntOrNull() ?: return plain(404, "Not Found")
+        session.localLookup(id)?.let { local ->
+            session.touch()
+            session.stats.requests.incrementAndGet()
+            return try { serveLocal(session, local, req) } catch (e: IOException) {
+                session.stats.lastError = e.javaClass.simpleName
+                plain(502, "Bad Gateway")
+            }
+        }
         val upstream = session.lookup(id) ?: return plain(404, "Not Found")
 
         session.touch()
@@ -49,6 +57,33 @@ class RelayServer(
             session.stats.lastError = e.javaClass.simpleName
             plain(502, "Bad Gateway")
         }
+    }
+
+    /** A file from the phone itself, with Range support so the Roku can seek. */
+    private fun serveLocal(session: RelaySession, src: LocalSource, req: IHTTPSession): NanoHTTPD.Response {
+        val total = src.length
+        val head = req.method == Method.HEAD
+        val range = ByteRange.parse(req.headers["range"], total)
+        val resp: NanoHTTPD.Response = when (range) {
+            is ByteRange.Unsatisfiable ->
+                NanoHTTPD.newFixedLengthResponse(Status(416, "Range Not Satisfiable"), "text/plain", "").also { it.addHeader("Content-Range", "bytes */$total") }
+            is ByteRange.Partial -> {
+                val body: NanoHTTPD.Response = if (head) NanoHTTPD.newFixedLengthResponse(Status(206, "Partial Content"), src.mime, "")
+                    .also { it.addHeader("Content-Length", range.size.toString()) }
+                else NanoHTTPD.newFixedLengthResponse(Status(206, "Partial Content"), src.mime,
+                    ServedStream(src.open(range.start), range.size, session.stats), range.size)
+                body.also { it.addHeader("Content-Range", "bytes ${range.start}-${range.end}/$total") }
+            }
+            is ByteRange.Full -> when {
+                head -> NanoHTTPD.newFixedLengthResponse(Status(200, "OK"), src.mime, "")
+                    .also { r -> if (total >= 0) r.addHeader("Content-Length", total.toString()) }
+                total >= 0 -> NanoHTTPD.newFixedLengthResponse(Status(200, "OK"), src.mime, ServedStream(src.open(0), total, session.stats), total)
+                else -> NanoHTTPD.newChunkedResponse(Status(200, "OK"), src.mime, ServedStream(src.open(0), Long.MAX_VALUE, session.stats))
+            }
+        }
+        if (total >= 0) resp.addHeader("Accept-Ranges", "bytes")
+        resp.addHeader("Cache-Control", "no-store")
+        return resp
     }
 
     private fun relay(session: RelaySession, firstUrl: String, req: IHTTPSession): NanoHTTPD.Response {
@@ -126,6 +161,22 @@ class RelayServer(
     fun forget(token: String) { clients.remove(token) }
 
     private fun plain(code: Int, text: String) = NanoHTTPD.newFixedLengthResponse(Status(code, text), "text/plain", text)
+
+    /** At most [remaining] bytes of a local file, counted into the session stats. Closing it closes the file. */
+    private class ServedStream(private val src: InputStream, private var remaining: Long, private val stats: RelayStats) : InputStream() {
+        override fun read(): Int {
+            if (remaining <= 0) return -1
+            return src.read().also { if (it >= 0) { remaining--; stats.bytes.incrementAndGet() } }
+        }
+        override fun read(b: ByteArray, off: Int, len: Int): Int {
+            if (remaining <= 0) return -1
+            val n = src.read(b, off, minOf(len.toLong(), remaining).toInt())
+            if (n > 0) { remaining -= n; stats.bytes.addAndGet(n.toLong()) }
+            return n
+        }
+        override fun available(): Int = minOf(src.available().toLong(), remaining).toInt()
+        override fun close() = src.close()
+    }
 
     private class CountingStream(src: InputStream, private val resp: UpResponse, private val stats: RelayStats) : FilterInputStream(src) {
         override fun read(): Int = super.read().also { if (it >= 0) stats.bytes.incrementAndGet() }
