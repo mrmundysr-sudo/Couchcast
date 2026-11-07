@@ -3,7 +3,7 @@ name: Build iOS app
 on:
   push:
     branches: [main, 'claude/ios']
-    paths: ['ios/**', '.github/workflows/ios.yml']
+    paths: ['ios/**', 'receiver/**', 'tools/package_receiver.py', '.github/workflows/ios.yml']
   workflow_dispatch:
 
 jobs:
@@ -16,6 +16,9 @@ jobs:
         run: |
           xcodebuild -version
           swift --version
+
+      - name: Bundled receiver package matches /receiver
+        run: python3 tools/package_receiver.py --check
 
       - name: Core logic tests (Roku control, relay server, photo prep)
         working-directory: ios/CouchcastCore

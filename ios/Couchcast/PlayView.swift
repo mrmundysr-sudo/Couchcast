@@ -115,9 +115,9 @@ final class PlayModel: ObservableObject {
         switch ReceiverCheck.classify(await ecp.apps(room.ip)) {
         case .current: return true
         case .unknown: fail("Couldn't reach the Roku. Check that the TV is on and on the same Wi-Fi, and that Couchcast is allowed under Settings → Privacy & Security → Local Network.")
-        case .notInstalled: fail("The Couchcast Receiver isn't installed on this Roku yet. Install it with the Couchcast Android app's receiver installer; the iPhone app can't install it yet.")
-        case .outdated: fail("The receiver on this Roku is out of date (the app needs \(ReceiverCheck.requiredVersion.map(String.init).joined(separator: "."))). Update it with the Couchcast Android app's receiver installer.")
-        case .otherDevApp: fail("A different sideloaded channel is on this Roku. Install the Couchcast Receiver with the Android app first.")
+        case .notInstalled: fail("The Couchcast Receiver isn't installed on this Roku yet. Install it from the Rooms tab → Install Couchcast Receiver.")
+        case .outdated: fail("The receiver on this Roku is out of date (the app needs \(ReceiverCheck.requiredVersion.map(String.init).joined(separator: "."))). Update it from the Rooms tab → Install Couchcast Receiver.")
+        case .otherDevApp: fail("A different sideloaded channel is on this Roku. Install the Couchcast Receiver from the Rooms tab (it replaces that channel).")
         }
         return false
     }

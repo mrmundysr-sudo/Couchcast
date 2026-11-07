@@ -25,6 +25,10 @@ struct RoomsView: View {
                         }
                     }.onDelete { offsets in offsets.map { state.rooms[$0] }.forEach { state.remove($0) } }
                 }
+                Section("Receiver") {
+                    NavigationLink("Install Couchcast Receiver on a Roku") { InstallView(defaultRoom: state.selected) }
+                    Text("Playing links and phone videos needs the small Couchcast Receiver channel on your Roku. This installs it from this iPhone.").font(.footnote).foregroundColor(.secondary)
+                }
                 Section("Find a Roku") {
                     Button {
                         Task { await scan() }
