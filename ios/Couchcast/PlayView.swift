@@ -7,6 +7,7 @@ struct PlayView: View {
     @StateObject private var model = PlayModel()
     @State private var link = ""
     @State private var pick: PhotosPickerItem?
+    @FocusState private var typing: Bool
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
@@ -18,9 +19,11 @@ struct PlayView: View {
                         .font(.footnote).foregroundColor(.secondary)
                     TextField("Video link or web page", text: $link)
                         .textFieldStyle(.roundedBorder).keyboardType(.URL).textInputAutocapitalization(.never).autocorrectionDisabled()
+                        .focused($typing).submitLabel(.go)
+                        .onSubmit { typing = false; model.playLink(room: room, raw: link, ecp: state.ecp) }
                     HStack {
-                        Button("Paste") { if let s = UIPasteboard.general.string { link = s.trimmingCharacters(in: .whitespacesAndNewlines) } }.buttonStyle(.bordered)
-                        Button("Play on Roku") { model.playLink(room: room, raw: link, ecp: state.ecp) }
+                        Button("Paste") { typing = false; if let s = UIPasteboard.general.string { link = s.trimmingCharacters(in: .whitespacesAndNewlines) } }.buttonStyle(.bordered)
+                        Button("Play on Roku") { typing = false; model.playLink(room: room, raw: link, ecp: state.ecp) }
                             .buttonStyle(.borderedProminent).frame(maxWidth: .infinity)
                             .disabled(model.busy || link.trimmingCharacters(in: .whitespaces).isEmpty)
                     }
@@ -41,6 +44,8 @@ struct PlayView: View {
                         .font(.footnote).foregroundColor(.secondary)
                 }.padding()
             }
+            .scrollDismissesKeyboard(.interactively)
+            .toolbar { ToolbarItemGroup(placement: .keyboard) { Spacer(); Button("Done") { typing = false } } }
             .onChange(of: pick) { item in
                 guard let item = item else { return }
                 pick = nil
@@ -99,7 +104,7 @@ final class PlayModel: ObservableObject {
         switch out.result {
         case .playing: ok("Confirmed: the Roku reports it is playing.", active: true)
         case .stoppedEarly: fail("The video started, then the Roku stopped it after about \(out.playedSeconds) seconds. The link may have expired, need a sign-in, or use a format this Roku can't play.")
-        case .receiverOpenNotConfirmed: warn("The receiver opened, but the Roku hasn't reported playing. Look at the TV: it shows the reason if the video failed.")
+        case .receiverOpenNotConfirmed: warn("The receiver opened, but the Roku hasn't reported playing (it says: \(out.last?.state ?? "nothing")\(out.last?.error == true ? ", error" : "")). Look at the TV: it shows the reason if the video failed.\nLink sent: \(url)")
         case .notStarted: fail("The Roku didn't start the receiver. Make sure the TV is on and try again.")
         case .sendFailed: fail("The Roku didn't accept the command. Check Wi-Fi, and that Control by mobile apps is on in the Roku's settings.")
         }
@@ -261,7 +266,10 @@ final class PlayModel: ObservableObject {
     private func fail(_ m: String) { message = m; color = .red; busy = false; active = false }
 
     static func normalize(_ raw: String) -> String? {
-        let t = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        var t = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        // A pasted link often drags extra words along ("https://… no b"): use the first word that is a web link.
+        let words = t.split(whereSeparator: { $0.isWhitespace }).map(String.init)
+        if words.count > 1, let first = words.first(where: { $0.lowercased().hasPrefix("http://") || $0.lowercased().hasPrefix("https://") }) { t = first }
         if t.isEmpty || t.contains(where: { $0.isWhitespace }) { return nil }
         let u: String
         if t.lowercased().hasPrefix("http://") || t.lowercased().hasPrefix("https://") { u = t }
