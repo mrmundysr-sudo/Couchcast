@@ -151,7 +151,7 @@ final class InstallModel: ObservableObject {
             checks = [CheckRow(label: "iPhone is on Wi-Fi", status: .pending),
                       CheckRow(label: "Roku answers on your network", status: .pending),
                       CheckRow(label: "Roku developer installer is available", status: .pending)]
-            func show(_ i: Int, _ s: CheckStatus, _ note: String = "") { checks[i].status = s; checks[i].note = note }
+            @MainActor func show(_ i: Int, _ s: CheckStatus, _ note: String = "") { checks[i].status = s; checks[i].note = note }
             let pending = store.restartPendingSince > 0
 
             guard LocalNetwork.wifiIPv4() != nil else {
