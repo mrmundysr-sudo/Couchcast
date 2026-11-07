@@ -23,7 +23,7 @@ sealed class ByteRange {
             }
             val start = a.toLongOrNull() ?: return Full
             if (start < 0) return Full
-            val end = if (b.isEmpty()) length - 1 else (b.toLongOrNull() ?: return Full)
+            val end = if (b.isEmpty()) Long.MAX_VALUE else (b.toLongOrNull() ?: return Full)
             if (end < start) return Full
             if (start >= length) return Unsatisfiable
             return Partial(start, minOf(end, length - 1))
