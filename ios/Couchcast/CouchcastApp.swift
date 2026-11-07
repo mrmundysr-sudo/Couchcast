@@ -51,6 +51,7 @@ struct RootView: View {
             RemoteView().tabItem { Label("Remote", systemImage: "gamecontroller") }
             ChannelsView().tabItem { Label("Channels", systemImage: "tv") }
             PlayView().tabItem { Label("Play", systemImage: "play.rectangle") }
+            CastView().tabItem { Label("Cast", systemImage: "tv.and.mediabox") }
             RoomsView().tabItem { Label("Rooms", systemImage: "house") }
         }
     }
