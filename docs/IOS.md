@@ -21,7 +21,7 @@ Same features as the Android app, except where iOS or Roku rules differ (below).
 - The page scan can't intercept network requests like Android's WebView; it reads the page's resource list and video tags instead.
 
 ## Google Cast
-The Cast tab, its confirmation logic (`CouchcastCore/Cast.swift`, tested) and the Cast code (`CastView.swift`) are in place, but **the Google Cast SDK is not linked yet**, so the tab says it isn't included. The SDK is a binary from Google; adding it is a decision about how to fetch it (Google's CocoaPods pod `google-cast-sdk`, or a Swift package that mirrors the same binary). After adding it: set `NSBonjourServices` to `_googlecast._tcp` and `_CC1AD845._googlecast._tcp` in `project.yml`, and initialise `GCKCastContext` with the default media receiver at launch. The code under `#if canImport(GoogleCast)` is written against the SDK's API but has never been compiled or run.
+The Cast tab, its confirmation logic (`CouchcastCore/Cast.swift`, tested) and the Cast code (`CastView.swift`) are in place, but **the Google Cast SDK is linked from the SRGSSR Swift package (a mirror of Google's 4.8.6 binary)**, so the tab says it isn't included. The SDK is a binary from Google; adding it is a decision about how to fetch it (Google's CocoaPods pod `google-cast-sdk`, or a Swift package that mirrors the same binary). After adding it: set `NSBonjourServices` to `_googlecast._tcp` and `_CC1AD845._googlecast._tcp` in `project.yml`, and initialise `GCKCastContext` with the default media receiver at launch. The code under `#if canImport(GoogleCast)` is written against the SDK's API but has never been compiled or run.
 
 ## Build checks (CI)
 `.github/workflows/ios.yml`: `swift test`, then an unsigned simulator build and an unsigned iPhone build.

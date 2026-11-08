@@ -1,9 +1,20 @@
 import SwiftUI
 import CouchcastCore
+#if canImport(GoogleCast)
+import GoogleCast
+#endif
 
 @main
 struct CouchcastApp: App {
     @StateObject private var state = AppState()
+
+    init() {
+        #if canImport(GoogleCast)
+        // Cast to a Chromecast / Google TV with Google's Default Media Receiver: nothing to install on the TV.
+        let options = GCKCastOptions(discoveryCriteria: GCKDiscoveryCriteria(applicationID: kGCKDefaultMediaReceiverApplicationID))
+        GCKCastContext.setSharedInstanceWith(options)
+        #endif
+    }
 
     var body: some Scene {
         WindowGroup {

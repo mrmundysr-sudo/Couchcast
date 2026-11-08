@@ -7,6 +7,9 @@ options:
 packages:
   CouchcastCore:
     path: CouchcastCore
+  GoogleCast:
+    url: https://github.com/SRGSSR/google-cast-sdk
+    exactVersion: 4.8.6
 targets:
   Couchcast:
     type: application
@@ -14,6 +17,7 @@ targets:
     sources: [Couchcast]
     dependencies:
       - package: CouchcastCore
+      - package: GoogleCast
     info:
       path: Couchcast/Info.plist
       properties:
@@ -24,6 +28,7 @@ targets:
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
         ITSAppUsesNonExemptEncryption: false
         NSLocalNetworkUsageDescription: Couchcast talks to your Roku and shares the videos and photos you choose with it over your home Wi-Fi.
+        NSBonjourServices: [_googlecast._tcp, _CC1AD845._googlecast._tcp]
         NSAppTransportSecurity:
           NSAllowsArbitraryLoads: true
           NSAllowsLocalNetworking: true
@@ -36,6 +41,7 @@ targets:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         SWIFT_VERSION: "5.0"
         GENERATE_INFOPLIST_FILE: NO
+        OTHER_LDFLAGS: "$(inherited) -ObjC"
 schemes:
   Couchcast:
     build:
