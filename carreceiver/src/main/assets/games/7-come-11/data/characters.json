@@ -1,0 +1,253 @@
+{
+ "witch": {
+  "id": "witch",
+  "name": "Morwen Thornweaver",
+  "short": "Morwen",
+  "title": "The Hexweaver",
+  "tagline": "Sharp-tongued and sharper with a Bramble. She loves to break your seals.",
+  "style": "Aggressive",
+  "accent": "#8fe05a",
+  "cardBack": "#0e3b2c",
+  "cardBackTrim": "#d9a53a",
+  "persona": {
+   "wOpp": 0.95,
+   "oppSeal": 17,
+   "ownSeal": 11,
+   "forceRefill": 0.7
+  },
+  "banter": {
+   "intro": [
+    "Ah, a visitor! Sit, sit — I do adore fresh company at the table.",
+    "Seven, eleven, and a pinch of mischief. Shall we?",
+    "Mind your cards, dear. They bite.",
+    "Let's see what the stars have stitched for you today.",
+    "Cards on the table… and thorns in the garden."
+   ],
+   "thinking": [
+    "Hmm, hmm… oh, this is delicious.",
+    "Let me stir the pot a moment…",
+    "Now where shall the trouble go?",
+    "Patience, darling. Art takes time.",
+    "One moment — I'm being clever."
+   ],
+   "oppPlay": [
+    "Hee-hee!",
+    "Watch this.",
+    "Just so.",
+    "Pretty, isn't it?",
+    "And another!",
+    "Tee-hee, there."
+   ],
+   "oppBustYou": [
+    "Poof! Where did your pile go?",
+    "Oops — did that belong to you?",
+    "Gone in a puff of thorn!",
+    "Don't pout, dear. It's only magic.",
+    "All that work? Compost."
+   ],
+   "youBustOpp": [
+    "Rude! I was fond of that pile.",
+    "Oh, you clever little sprite.",
+    "Hmph. Lucky trick.",
+    "That stung. I'll remember it.",
+    "You wicked thing — I like you."
+   ],
+   "oppSeal": [
+    "Sealed with a kiss — and a cackle.",
+    "Locked tight. Try and pry it, dear.",
+    "Mine, mine, all mine!",
+    "One sealed. Feeling nervous?",
+    "Ooh, a perfect pair."
+   ],
+   "youSeal": [
+    "Beginner's luck… surely.",
+    "Hmm. That's actually rather good.",
+    "A seal? Cute. Cute until I break it.",
+    "Don't get comfortable, dear.",
+    "Well, well — someone's been practicing."
+   ],
+   "oppBreak": [
+    "Crack! Your little seal's in pieces.",
+    "Locks are only suggestions, darling.",
+    "Shattered! Isn't it pretty?",
+    "Nothing is safe at my table.",
+    "Oh dear. Was that important?"
+   ],
+   "youBreak": [
+    "My seal! You absolute rascal!",
+    "Cracked it like an egg — rude.",
+    "Grr! I worked hard on that.",
+    "Fine. Fine! Now it's personal.",
+    "Clever, clever… I hate it."
+   ],
+   "oppWinning": [
+    "I'm feeling rather unstoppable.",
+    "You look worried. Adorable.",
+    "A turn or two and it's all mine, I think.",
+    "The cards simply adore me.",
+    "Careful, dear — I smell victory."
+   ],
+   "oppLosing": [
+    "Don't smirk, it's unbecoming.",
+    "I'm only warming up.",
+    "A temporary setback. I have thorns.",
+    "Hmm. I may need to cheat. (Kidding!)",
+    "Fine, the stars favour you tonight."
+   ],
+   "reshuffle": [
+    "The deck has gone round — a fresh stir of mischief!",
+    "Shuffling! Pay no attention to my fingers.",
+    "Spent cards, reborn. How poetic."
+   ],
+   "nudge": [
+    "Tick-tock, dear. Even the moon moves faster.",
+    "Waiting for a miracle?",
+    "Take your time. I'll sharpen my nails.",
+    "Cast something, sweetheart!"
+   ],
+   "win": [
+    "Marvellous game! Better luck next full moon.",
+    "That's the game, dear — I'll gift you a lollipop.",
+    "Cackle! Another soul charmed.",
+    "Sweet victory. Shall we go again?",
+    "You played well… just not well enough."
+   ],
+   "lose": [
+    "Well… that was unexpected. Congratulations.",
+    "You beat me! I'm furious and delighted.",
+    "Rematch. Right now. I insist.",
+    "The stars were wrong. Obviously.",
+    "Hmph! Take your win and enjoy it."
+   ],
+   "draw": [
+    "A stalemate? How terribly tidy.",
+    "Neither of us wins — I loathe it. Again?"
+   ]
+  }
+ },
+ "wizard": {
+  "id": "wizard",
+  "name": "Aurelio Sunkeeper",
+  "short": "Aurelio",
+  "title": "The Patient Archmage",
+  "tagline": "Calm, dry and annoyingly wise. He seals early and strikes only when it pays.",
+  "style": "Patient",
+  "accent": "#f1c15a",
+  "cardBack": "#2a1650",
+  "cardBackTrim": "#e4a93a",
+  "persona": {
+   "wOpp": 0.45,
+   "oppSeal": 10,
+   "ownSeal": 15,
+   "forceRefill": 0.15
+  },
+  "banter": {
+   "intro": [
+    "Welcome, traveller. Do take a seat — the cards are patient.",
+    "Seven and eleven. Simple numbers, endless mischief.",
+    "I've been waiting all evening for a worthy opponent. Don't disappoint me.",
+    "Let us see what the sun and moon have decided.",
+    "Ah, a challenger. How refreshing."
+   ],
+   "thinking": [
+    "Hmm… yes… quite interesting.",
+    "Allow an old wizard a moment.",
+    "Ah, there it is.",
+    "Patience. The best spells simmer.",
+    "Let me consult the stars — and my knees."
+   ],
+   "oppPlay": [
+    "Just so.",
+    "A small thing.",
+    "Mm-hm.",
+    "Thus.",
+    "Observe."
+   ],
+   "oppBustYou": [
+    "Ah. That pile has gone to a better place.",
+    "A Force, dear friend. I did warn you.",
+    "Terribly sorry. Not terribly sorry.",
+    "Gone in a flash. I do love a flash.",
+    "The cards giveth… and I taketh away."
+   ],
+   "youBustOpp": [
+    "Well played. I did rather like that pile.",
+    "Ha! A fine strike.",
+    "Hm. I shall remember that.",
+    "Excellent — you have teeth after all.",
+    "A bold move. I approve, grudgingly."
+   ],
+   "oppSeal": [
+    "There. Sealed, and entirely proper.",
+    "Seven, eleven — order restored.",
+    "A tidy bit of work, if I say so.",
+    "And that stays put.",
+    "Like a well-made door. Locked."
+   ],
+   "youSeal": [
+    "Oh, nicely done.",
+    "A seal already? You surprise me.",
+    "Hm. I may have underestimated you.",
+    "Fine craftsmanship.",
+    "Noted. And respected."
+   ],
+   "oppBreak": [
+    "Even the strongest seal has a weakness.",
+    "A little crack, and it all comes tumbling.",
+    "Forgive me — I do enjoy a loose thread.",
+    "Nothing is permanent. Least of all that.",
+    "Ah, the sweet sound of breaking glass."
+   ],
+   "youBreak": [
+    "Cracked my seal! How rude. How impressive.",
+    "Hm! A Force at precisely the right time.",
+    "I shall have to redo my homework.",
+    "Well. That is annoying.",
+    "My, my. You do play dirty."
+   ],
+   "oppWinning": [
+    "I sense the tide turning in my favour.",
+    "The sun is rather bright on my side.",
+    "Do not despair. Only slightly worry.",
+    "All proceeding as foreseen.",
+    "Two cards from victory, I suspect."
+   ],
+   "oppLosing": [
+    "Ah. The student surpasses the master.",
+    "Interesting. Truly. Interesting.",
+    "I have been behind before. It was centuries ago.",
+    "A temporary difficulty.",
+    "Hm. You may be the real thing."
+   ],
+   "reshuffle": [
+    "The spent cards return — as all things do.",
+    "A fresh shuffle. How cyclical.",
+    "Ah, the deck renews itself."
+   ],
+   "nudge": [
+    "Take your time. I have all the time in the world.",
+    "The moon is patient. I, rather less so.",
+    "Do cast a card, dear — my tea is cooling.",
+    "Hm? Pondering? Ponder away."
+   ],
+   "win": [
+    "A fine game. You'll beat me someday.",
+    "Victory — and a good lesson for you.",
+    "The sun rises on my side tonight.",
+    "Well fought. Shall we go again?",
+    "Do not be sad. Be better."
+   ],
+   "lose": [
+    "Bravo! You've bested an old wizard.",
+    "Defeated! I shall go sulk with some tea.",
+    "Remarkable. I demand a rematch.",
+    "I taught you too well.",
+    "The student has become the sorcerer."
+   ],
+   "draw": [
+    "A draw — balance in all things.",
+    "Neither sun nor moon prevails. Again?"
+   ]
+  }
+ }
+}

@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "note": "Every visual is loaded by slot name. Replace the file (same name) or change the path here - no code changes needed.",
+  "slots": {
+    "splash.background": "backgrounds/splash.webp",
+    "table.background": "backgrounds/table.webp",
+    "result.win.background": "backgrounds/result_win.webp",
+    "result.loss.background": "backgrounds/result_loss.webp",
+    "character.witch.neutral": "characters/witch/neutral.webp",
+    "character.wizard.neutral": "characters/wizard/neutral.webp",
+    "result.win.banner": "ui/banner_win.webp",
+    "result.loss.banner": "ui/banner_lose.webp",
+    "ui.playAgain": "ui/btn_play_again.webp",
+    "ui.coin7": "ui/coin_7.webp",
+    "ui.coin11": "ui/coin_11.webp"
+  },
+  "characterMoods": [
+    "neutral",
+    "smug",
+    "worried",
+    "angry",
+    "happy",
+    "defeated"
+  ],
+  "characterMoodSlotPattern": "character.{id}.{mood}",
+  "cards": {
+    "overridePattern": "cards/{suit}_{rank}.webp",
+    "overrideBack": "cards/back.webp",
+    "suits": [
+      "sun",
+      "bloom",
+      "moon",
+      "thorn"
+    ],
+    "note": "Optional. If cards/<suit>_<rank>.webp exists (rank 1-13) it replaces the drawn card face; cards/back.webp replaces the card back.",
+    "useOverrides": false
+  },
+  "source": {
+    "app": "Touch 7 Come 11",
+    "exported_at": "2026-10-18T08:42:12.270073-04:00"
+  }
+}

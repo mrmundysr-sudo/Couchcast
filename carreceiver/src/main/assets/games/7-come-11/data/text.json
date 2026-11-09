@@ -1,0 +1,196 @@
+{
+ "app": "Touch 7 Come 11",
+ "splash": {
+  "tap": "Touch to Begin",
+  "loading": "Gathering the stars…",
+  "ready": "The table is set"
+ },
+ "menu": {
+  "title": "The Duel Table",
+  "opponent": "Choose Your Opponent",
+  "difficulty": "Choose Your Challenge",
+  "first": "Who Draws First Blood?",
+  "begin": "Begin the Duel",
+  "how": "How to Play",
+  "record": "Your Record",
+  "wins": "wins",
+  "losses": "losses",
+  "draws": "draws",
+  "settings": "Charms",
+  "tapHint": "Tap a card to choose",
+  "target": "Play To",
+  "targetNote": "First to {n}. Seal both: 2. Deck win: 1. A lone seal on a loss: 1. Both seal out: 2 each."
+ },
+ "difficulty": {
+  "beginner": {
+   "name": "Apprentice",
+   "sub": "Beginner",
+   "blurb": "Forgiving. Makes the odd blunder."
+  },
+  "experienced": {
+   "name": "Adept",
+   "sub": "Experienced",
+   "blurb": "Plays fair and plays smart."
+  },
+  "professional": {
+   "name": "Archmage",
+   "sub": "Professional",
+   "blurb": "Sharp, patient, ruthless."
+  }
+ },
+ "first": {
+  "me": "Me",
+  "foe": "Foe",
+  "fate": "Fate"
+ },
+ "settings": {
+  "title": "Charms",
+  "sfx": "Sound Effects",
+  "music": "Music",
+  "vibration": "Vibration",
+  "banter": "Banter",
+  "lockBreak": "Forces Break Seals",
+  "rules": "How to Play",
+  "leave": "Leave the Duel",
+  "resume": "Return to the Table",
+  "hint": "Swipe up for charms"
+ },
+ "game": {
+  "yourMove": "Your Move",
+  "castN": "Cast {n} more",
+  "castOne": "Cast 1 more",
+  "readyEnd": "All cast — end your turn",
+  "foeThinks": "{name} is scheming…",
+  "foeMove": "{name}'s Move",
+  "cover": "Cover",
+  "bust": "Unleash",
+  "bury": "Bury",
+  "base": "Plant",
+  "undo": "Rewind",
+  "endTurn": "End Turn",
+  "deck": "Deck",
+  "spent": "Spent",
+  "you": "You",
+  "tapPile": "Tap a pile to cast",
+  "illegal": {
+   "force-on-top": "A Force can't rest on top — cover it first.",
+   "empty-pile": "Fill your empty pile before ending.",
+   "cards-left": "Cast all your cards first."
+  },
+  "stuck": "Release the Magic",
+  "stuckHint": "Can't find a legal ending? Release the magic to continue.",
+  "seal7": "Sealed the 7",
+  "seal11": "Sealed the 11",
+  "seals": "Seals",
+  "sealsTitle": "Your Seals",
+  "lockOf": "Lock the {v}: {a} + {b}",
+  "unlockOf": "Unlock the {v}",
+  "noSeals": "No pair of your piles adds to 7 or 11 yet.",
+  "unlocked": "Seal released",
+  "readyWin": "Both sealed — end your turn to win",
+  "cracked": "Seal broken!",
+  "reshuffled": "The Spent pile returns to the deck",
+  "sealed": "Sealed",
+  "unsealed": "Seal broken",
+  "emptyPile": "Empty",
+  "hiddenDepth": "{n} beneath",
+  "pickCard": "Pick a card",
+  "draw": "Drawing…",
+  "youWinDeck": "The deck ran dry — you were closer.",
+  "youLoseDeck": "The deck ran dry — they were closer.",
+  "drawDeck": "The deck ran dry — dead even.",
+  "targets": "Targets",
+  "seven": "7",
+  "eleven": "11",
+  "scoreChip": "{a} – {b}",
+  "finalCastN": "Last turn — cast {n} more",
+  "finalReady": "Last turn — end your turn",
+  "readyDouble": "Both sealed — end your turn to draw",
+  "finalYou": "Last turn! Match their seals or break one.",
+  "finalFoe": "{name} sealed out — you may reply once!",
+  "finalFoeYours": "You sealed out — {name} gets one last turn.",
+  "winCancelled": "A seal was broken — the duel goes on!",
+  "doubleSeal": "Both sealed out — a draw, 2 points each."
+ },
+ "result": {
+  "win": "The stars are yours",
+  "lose": "The table is theirs",
+  "draw": "A perfectly balanced draw",
+  "playAgain": "Play Again",
+  "menu": "Main Menu",
+  "stats": "Turns {t} · Seals {s} · Forces {f}",
+  "bannerDraw": "A Draw!",
+  "nextRound": "Next Round",
+  "newMatch": "New Match",
+  "points": "{who} +{n}",
+  "noPoints": "No points this round",
+  "score": "You {a} – {b} {name}",
+  "toTarget": "First to {n}",
+  "matchWin": "The match is yours",
+  "matchLose": "The match is theirs",
+  "opensYou": "You open the next round",
+  "opensFoe": "{name} opens the next round",
+  "you": "You",
+  "suddenDeath": "Level — sudden death!",
+  "consolationYou": "Your held seal still earns a point.",
+  "consolationFoe": "{name}’s held seal still earns a point."
+ },
+ "rules": {
+  "title": "How to Play",
+  "pages": [
+   {
+    "h": "The Goal",
+    "b": [
+     "Seal one pair of your piles that adds up to exactly <b>7</b>, and another pair that adds up to exactly <b>11</b>.",
+     "Do both and the duel is yours."
+    ]
+   },
+   {
+    "h": "The Cards",
+    "b": [
+     "<b>Suns</b> and <b>Blooms</b> add. <b>Moons</b> and <b>Thorns</b> subtract.",
+     "Only the <b>top card</b> of a pile counts. Cards beneath are hidden — even from you.",
+     "The four 13s are <b>Forces</b>: Flare, Overgrowth, Eclipse and Bramble. They have no value."
+    ]
+   },
+   {
+    "h": "Your Turn",
+    "b": [
+     "You hold 4 cards. <b>Cast every one</b>, onto <i>any</i> pile — yours or your opponent's.",
+     "Each card goes on top of a pile and <b>covers</b> whatever was showing. Play as many cards as you like on one pile.",
+     "Then end your turn and draw back up to 4."
+    ]
+   },
+   {
+    "h": "Forces & Busts",
+    "b": [
+     "A Force <b>covering</b> a pile blasts it away — every card in it goes to the Spent pile.",
+     "A Force you <b>cover</b> with another card is hidden and does nothing... until that pile is blasted later.",
+     "A Force may start an empty pile, but it can't be left on top when your turn ends."
+    ]
+   },
+   {
+    "h": "Seals",
+    "b": [
+     "Whenever two of your piles add to <b>7</b> or <b>11</b>, tap <b>Seals</b> to <b>lock</b> them. An empty pile counts as 0.",
+     "On your own turn you can lock and <b>unlock</b> as often as you like. Unlocking frees your piles so you can play on them again.",
+     "You win if both the 7 and the 11 are locked when your turn ends.",
+     "<b>Opening player:</b> if you opened the round and seal both, your opponent gets <b>one last turn</b>. If they seal both too, it is a draw. If a Force breaks one of your seals, your win is cancelled and play goes on.",
+     "Locked piles are frozen — except to a Force, which can shatter one and free its partner.",
+     "Never end a turn with an empty pile of your own, unless it is locked."
+    ]
+   },
+   {
+    "h": "The Match",
+    "b": [
+     "A duel is played over several rounds, as a race to <b>7</b> or <b>11</b> points. Pick which on the menu.",
+     "Seal both targets to win a round for <b>2</b> points. If both players seal out, each takes <b>2</b>. If the deck runs dry, the player who is closer wins it for <b>1</b>. A deck-out draw scores nothing.",
+     "Lose a round while still holding <b>one</b> seal and you take <b>1</b> point anyway.",
+     "If both players pass the target in the same round, the higher total wins. If you are level, play on until someone leads.",
+     "You choose who opens the first round. After that the opener switches every round."
+    ]
+   }
+  ]
+ },
+ "rotate": "Please turn your device upright"
+}

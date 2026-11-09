@@ -1,0 +1,116 @@
+{
+  "version": 1,
+  "note": "Sounds load by name from this file. Replace a file (keep the name) or edit the paths; list several formats and the first playable one is used.",
+  "sfx": {
+    "tap": [
+      "sfx/tap.ogg",
+      "sfx/tap.m4a"
+    ],
+    "select": [
+      "sfx/select.ogg",
+      "sfx/select.m4a"
+    ],
+    "deselect": [
+      "sfx/deselect.ogg",
+      "sfx/deselect.m4a"
+    ],
+    "draw": [
+      "sfx/draw.ogg",
+      "sfx/draw.m4a"
+    ],
+    "shuffle": [
+      "sfx/shuffle.ogg",
+      "sfx/shuffle.m4a"
+    ],
+    "place": [
+      "sfx/place.ogg",
+      "sfx/place.m4a"
+    ],
+    "tuck": [
+      "sfx/tuck.ogg",
+      "sfx/tuck.m4a"
+    ],
+    "error": [
+      "sfx/error.ogg",
+      "sfx/error.m4a"
+    ],
+    "pop": [
+      "sfx/pop.ogg",
+      "sfx/pop.m4a"
+    ],
+    "toggleOn": [
+      "sfx/toggleOn.ogg",
+      "sfx/toggleOn.m4a"
+    ],
+    "toggleOff": [
+      "sfx/toggleOff.ogg",
+      "sfx/toggleOff.m4a"
+    ],
+    "yourTurn": [
+      "sfx/yourTurn.ogg",
+      "sfx/yourTurn.m4a"
+    ],
+    "foeTurn": [
+      "sfx/foeTurn.ogg",
+      "sfx/foeTurn.m4a"
+    ],
+    "bustFlare": [
+      "sfx/bustFlare.ogg",
+      "sfx/bustFlare.m4a"
+    ],
+    "bustOvergrowth": [
+      "sfx/bustOvergrowth.ogg",
+      "sfx/bustOvergrowth.m4a"
+    ],
+    "bustEclipse": [
+      "sfx/bustEclipse.ogg",
+      "sfx/bustEclipse.m4a"
+    ],
+    "bustBramble": [
+      "sfx/bustBramble.ogg",
+      "sfx/bustBramble.m4a"
+    ],
+    "seal": [
+      "sfx/seal.ogg",
+      "sfx/seal.m4a"
+    ],
+    "unseal": [
+      "sfx/unseal.ogg",
+      "sfx/unseal.m4a"
+    ],
+    "win": [
+      "sfx/win.ogg",
+      "sfx/win.m4a"
+    ],
+    "lose": [
+      "sfx/lose.ogg",
+      "sfx/lose.m4a"
+    ],
+    "swoosh": [
+      "sfx/swoosh.ogg",
+      "sfx/swoosh.m4a"
+    ]
+  },
+  "music": {
+    "menu": {
+      "files": [
+        "music/menu.ogg",
+        "music/menu.m4a"
+      ],
+      "loop": true,
+      "gain": 0.42
+    },
+    "game": {
+      "files": [
+        "music/game.ogg",
+        "music/game.m4a"
+      ],
+      "loop": true,
+      "gain": 0.42
+    }
+  },
+  "gain": {
+    "sfx": 0.9,
+    "music": 1.0
+  }
+}

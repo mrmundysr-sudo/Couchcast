@@ -34,7 +34,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           cp app/build/outputs/apk/debug/app-debug.apk couchcast.apk
-          gh release create "apk-${{ github.run_number }}" couchcast.apk \
+          cp carreceiver/build/outputs/apk/debug/carreceiver-debug.apk car-receiver.apk
+          gh release create "apk-${{ github.run_number }}" couchcast.apk car-receiver.apk \
             --target "${{ github.sha }}" --prerelease \
             --title "Couchcast debug build ${{ github.run_number }}" \
             --notes "Debug APK built from ${{ github.sha }}"

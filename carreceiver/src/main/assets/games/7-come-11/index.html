@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#0b0a1c">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Touch 7 Come 11</title>
+<link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+<div id="app">
+
+  <!-- SPLASH: art + loader. The title is part of the splash picture. -->
+  <section id="splash" class="screen active">
+    <div class="bg" data-art="splash.background"></div>
+    <div class="shade"></div>
+    <div class="splash-ui">
+      <div class="loader" id="loader"><div class="bar"><i id="loadbar"></i></div><p id="loadtext"></p></div>
+      <button id="touchBegin" class="tap-prompt" hidden></button>
+    </div>
+  </section>
+
+  <!-- MENU: built by js/ui/menu.js from data/text.json + data/characters.json -->
+  <section id="menu" class="screen"></section>
+
+  <!-- GAME -->
+  <section id="game" class="screen">
+    <div class="bg" data-art="table.background"></div>
+    <div class="vignette"></div>
+    <div class="foe-wrap"><img id="foeImg" alt="" draggable="false"><div id="bubble" class="bubble"></div></div>
+    <header class="hud">
+      <button id="btnMenu" class="chip" aria-label="Charms"><span></span><span></span><span></span></button>
+      <div class="foe-info"><b id="foeName"></b><small id="foeTitle"></small></div>
+      <div id="matchChip" class="match-chip" aria-label="Match score"></div>
+      <div id="foeHand" class="foe-hand"></div>
+      <div id="foeCoins" class="coins"></div>
+    </header>
+    <div class="stage">
+      <div class="board3d">
+        <div id="foeRow" class="row foe"></div>
+        <div id="mid" class="mid">
+          <div id="deck" class="mini-stack"><span class="lbl"></span></div>
+          <div id="status" class="status"></div>
+          <div id="spent" class="mini-stack spent"><span class="lbl"></span></div>
+        </div>
+        <div id="meRow" class="row me"></div>
+      </div>
+    </div>
+    <div id="controls" class="controls">
+      <div id="meCoins" class="coins me"></div>
+      <button id="btnUndo" class="btn ghost" disabled></button>
+      <button id="btnSeals" class="btn ghost" disabled></button>
+      <button id="btnEnd" class="btn gold" disabled></button>
+    </div>
+    <div id="hand" class="hand"></div>
+    <div id="gameHandle" class="handle" aria-label="Swipe up for charms"><i></i></div>
+  </section>
+
+  <!-- RESULT -->
+  <section id="result" class="screen">
+    <div id="resBg" class="bg"></div>
+    <div class="shade"></div>
+    <div class="res-foe"><img id="resFoe" alt="" draggable="false"><div id="resBubble" class="bubble"></div></div>
+    <div class="res-ui">
+      <img id="resBanner" class="banner" alt="" draggable="false">
+      <h2 id="resTitle"></h2>
+      <p id="resSub"></p>
+      <p id="resScore" class="score"></p>
+      <p id="resNext" class="next"></p>
+      <p id="resOpen" class="next"></p>
+      <p id="resStats" class="stats"></p>
+      <button id="btnAgain" class="art-btn" data-art-btn="ui.playAgain"><span></span></button>
+      <button id="btnToMenu" class="btn ghost"></button>
+    </div>
+  </section>
+
+  <!-- Swipe-up charms (settings) sheet -->
+  <div id="scrim" class="scrim"></div>
+  <aside id="sheet" class="sheet" aria-hidden="true"></aside>
+  <div id="modal" class="modal"></div>
+  <div id="fx" class="fx"></div>
+  <div id="toast" class="toast"></div>
+  <div id="rotate" class="rotate"></div>
+</div>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

@@ -14,3 +14,4 @@ dependencyResolutionManagement {
 }
 rootProject.name = "Couchcast"
 include(":app")
+include(":carreceiver")

@@ -1,0 +1,128 @@
+{
+    "schema": "app-visual-builder/manifest@1",
+    "app_name": "Touch 7 Come 11",
+    "exported_at": "2026-10-18T08:42:12.270073-04:00",
+    "page_count": 5,
+    "coordinate_space": "normalized_0_1",
+    "pages": [
+        {
+            "id": "page_01",
+            "index": 0,
+            "name": "Splash",
+            "folder": "pages/page_01_splash",
+            "notes": "",
+            "slots": {
+                "clean": {
+                    "path": "pages/page_01_splash/clean.png",
+                    "display_name": "splash_clean.png"
+                },
+                "markup": [],
+                "psd": null,
+                "coords": null,
+                "other": []
+            },
+            "image_size": null,
+            "items": []
+        },
+        {
+            "id": "page_02",
+            "index": 1,
+            "name": "Menu",
+            "folder": "pages/page_02_menu",
+            "notes": "please just use a cardholder here with code over it for beginner, experienced and professional plus whatever other setting we need ",
+            "slots": {
+                "clean": null,
+                "markup": [],
+                "psd": null,
+                "coords": null,
+                "other": []
+            },
+            "image_size": null,
+            "items": []
+        },
+        {
+            "id": "page_03",
+            "index": 2,
+            "name": "Gameplay",
+            "folder": "pages/page_03_gameplay",
+            "notes": "these are two characters to be across the table from us on the background, the user can pick which one on the setup screen",
+            "slots": {
+                "clean": {
+                    "path": "pages/page_03_gameplay/clean.png",
+                    "display_name": "gameplay_clean.png"
+                },
+                "markup": [],
+                "psd": null,
+                "coords": null,
+                "other": [
+                    {
+                        "path": "pages/page_03_gameplay/other_1.png",
+                        "display_name": "gameplay_file_0000000095b481f5af23565ed5a92e2c.png"
+                    },
+                    {
+                        "path": "pages/page_03_gameplay/other_2.png",
+                        "display_name": "gameplay_file_000000002d3081f5aa3433f2ff88d393.png"
+                    }
+                ]
+            },
+            "image_size": null,
+            "items": []
+        },
+        {
+            "id": "page_04",
+            "index": 3,
+            "name": "Win",
+            "folder": "pages/page_04_win",
+            "notes": "please apply the win or loss text and reaction here",
+            "slots": {
+                "clean": {
+                    "path": "pages/page_04_win/clean.png",
+                    "display_name": "win_clean.png"
+                },
+                "markup": [],
+                "psd": null,
+                "coords": null,
+                "other": [
+                    {
+                        "path": "pages/page_04_win/other_1.png",
+                        "display_name": "win_file_0000000052b881f5a7c9a39b4cf34a6d.png"
+                    },
+                    {
+                        "path": "pages/page_04_win/other_2.png",
+                        "display_name": "win_file_00000000847881f58ee3dff9db29f536.png"
+                    }
+                ]
+            },
+            "image_size": null,
+            "items": []
+        },
+        {
+            "id": "page_05",
+            "index": 4,
+            "name": "Loss",
+            "folder": "pages/page_05_loss",
+            "notes": "please apply the win or loss text and reaction here",
+            "slots": {
+                "clean": {
+                    "path": "pages/page_05_loss/clean.png",
+                    "display_name": "loss_clean.png"
+                },
+                "markup": [],
+                "psd": null,
+                "coords": null,
+                "other": [
+                    {
+                        "path": "pages/page_05_loss/other_1.png",
+                        "display_name": "loss_file_00000000847881f58ee3dff9db29f536.png"
+                    },
+                    {
+                        "path": "pages/page_05_loss/other_2.png",
+                        "display_name": "loss_file_0000000052b881f5a7c9a39b4cf34a6d.png"
+                    }
+                ]
+            },
+            "image_size": null,
+            "items": []
+        }
+    ]
+}
